@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 from typing import Any
 
@@ -5,7 +6,11 @@ import joblib
 import pandas as pd
 
 BASE_DIR = Path(__file__).resolve().parent
-MODEL_DIR = BASE_DIR / "MODELS" / "NUTRITION_RECOMENDATION_MODEL"
+MODELS_DIR = Path(os.getenv("MODELS_DIR", "MODELS"))
+if not MODELS_DIR.is_absolute():
+    MODELS_DIR = BASE_DIR / MODELS_DIR
+
+MODEL_DIR = MODELS_DIR / "NUTRITION_RECOMENDATION_MODEL"
 MODEL_PATH = MODEL_DIR / "cattle_nutrition_tree.pkl"
 ENCODERS_PATH = MODEL_DIR / "label_encoders.pkl"
 FEATURE_COLUMNS = [

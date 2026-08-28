@@ -178,15 +178,17 @@ logger = logging.getLogger(__name__)
 # ─────────────────────────────────────────────
 # Config
 # ─────────────────────────────────────────────
+MODELS_DIR = Path(os.getenv("MODELS_DIR", "MODELS"))
+
 MODEL_PATHS = [
-    Path("MODELS/cattle_breed_model_v2/best.pt"),
-    Path("MODELS/best_vit_small_patch16_224_cattle.pth"),
-    Path("MODELS/ViT_Results_85Plus/best_vit_small_patch16_224_cattle.pth"),
+    MODELS_DIR / "cattle_breed_model_v2/best.pt",
+    MODELS_DIR / "best_vit_small_patch16_224_cattle.pth",
+    MODELS_DIR / "ViT_Results_85Plus/best_vit_small_patch16_224_cattle.pth",
 ]
-SKIN_MODEL_PATH = Path("MODELS/SKIN_DISEASE_MODELS/VIT/vit_cattle_skin_model.pth")
-SKIN_YOLO_MODEL_PATH = Path("MODELS/SKIN_DISEASE_MODELS/YOLO/best (3).pt")
-CLASS_NAMES_PATH = Path("MODELS/class_names.json")   # optional – auto-built if absent
-SKIN_CLASS_NAMES_PATH = Path("MODELS/SKIN_DISEASE_MODELS/VIT/class_names.json")
+SKIN_MODEL_PATH = MODELS_DIR / "SKIN_DISEASE_MODELS/VIT/vit_cattle_skin_model.pth"
+SKIN_YOLO_MODEL_PATH = MODELS_DIR / "SKIN_DISEASE_MODELS/YOLO/best (3).pt"
+CLASS_NAMES_PATH = MODELS_DIR / "class_names.json"   # optional – auto-built if absent
+SKIN_CLASS_NAMES_PATH = MODELS_DIR / "SKIN_DISEASE_MODELS/VIT/class_names.json"
 IMAGE_SIZE  = 320
 DEVICE      = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -198,10 +200,10 @@ def find_model_path() -> Path:
                 logger.info(f"Using fallback model path: {path}")
             return path
 
-    candidates = sorted(Path("MODELS").rglob("*.pth"))
+    candidates = sorted(MODELS_DIR.rglob("*.pth"))
     if candidates:
         fallback = candidates[0]
-        logger.warning(f"Default model path not found; using first available .pth in MODELS: {fallback}")
+        logger.warning(f"Default model path not found; using first available .pth in {MODELS_DIR}: {fallback}")
         return fallback
 
     return MODEL_PATHS[0]
@@ -293,7 +295,7 @@ def load_vit_model():
         logger.warning("timm not available; ViT model will not be loaded")
         return None
 
-    vit_path = Path("MODELS/ViT_Results_85Plus/best_vit_small_patch16_224_cattle.pth")
+    vit_path = MODELS_DIR / "ViT_Results_85Plus/best_vit_small_patch16_224_cattle.pth"
     if not vit_path.exists():
         logger.warning(f"ViT checkpoint not found at {vit_path}")
         return None

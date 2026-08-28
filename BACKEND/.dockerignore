@@ -1,0 +1,8 @@
+venv/
+.venv/
+__pycache__/
+*.pyc
+.env
+MODELS/
+cattle_dataset/
+THE_FINAL_CATTLE_SKIN_DATASET/

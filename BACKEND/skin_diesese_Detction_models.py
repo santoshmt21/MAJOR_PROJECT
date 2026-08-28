@@ -10,12 +10,15 @@ import timm
 from PIL import Image
 from torchvision import transforms
 
-MODEL_PATH = Path(r"C:\Users\Santosh\Desktop\PROJECT_PHASE_1\BACKEND\MODELS\SKIN_DISEASE_MODELS\VIT\vit_cattle_skin_model.pth")
+import os
+
+MODELS_DIR = Path(os.getenv("MODELS_DIR", "MODELS"))
+MODEL_PATH = MODELS_DIR / "SKIN_DISEASE_MODELS" / "VIT" / "vit_cattle_skin_model.pth"
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 def load_class_names(num_classes: int) -> list[str]:
-    skin_class_names_json = Path("MODELS/SKIN_DISEASE_MODELS/VIT/class_names.json")
+    skin_class_names_json = MODELS_DIR / "SKIN_DISEASE_MODELS" / "VIT" / "class_names.json"
     if skin_class_names_json.exists():
         with open(skin_class_names_json, "r", encoding="utf-8") as f:
             names = json.load(f)
