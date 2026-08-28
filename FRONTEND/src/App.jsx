@@ -139,6 +139,13 @@ export default function CattleCare() {
   const [modelTab, setModelTab] = useState("vit");
   const [breedsList, setBreedsList] = useState(BREEDS_INFO);
 
+  const [skinImage, setSkinImage] = useState(null);
+  const [skinImageFile, setSkinImageFile] = useState(null);
+  const [skinResult, setSkinResult] = useState(null);
+  const [skinError, setSkinError] = useState(null);
+  const [skinLoading, setSkinLoading] = useState(false);
+  const [skinModelTab, setSkinModelTab] = useState("yolo");
+
   useEffect(() => {
     const fetchBreeds = async () => {
       try {
@@ -170,7 +177,49 @@ export default function CattleCare() {
   const [isChatLoading, setIsChatLoading] = useState(false);
   const [chatError, setChatError] = useState(null);
 
+  const [nutRecFormData, setNutRecFormData] = useState({
+    breed: 'Gir',
+    category: 'Dairy Lactating',
+    weight_kg: 400,
+    age_months: 48,
+    milk_yield_l: 18,
+    bcs: 3.0,
+    activity_level: 'Medium',
+    health_status: 'Normal'
+  });
+  const [nutritionOptions, setNutritionOptions] = useState({
+    Breed: ['Gir'],
+    Category: ['Dairy Lactating'],
+    Activity_Level: ['Low', 'Medium', 'High'],
+    Health_Status: ['Normal', 'FMD', 'Lumpy Skin Disease', 'Ringworm']
+  });
+  const [nutRecLoading, setNutRecLoading] = useState(false);
+  const [nutRecResult, setNutRecResult] = useState(null);
+  const [nutRecError, setNutRecError] = useState(null);
+
+  useEffect(() => {
+    const fetchNutritionOptions = async () => {
+      try {
+        const res = await fetch("http://127.0.0.1:8000/nutrition-options");
+        if (!res.ok) return;
+        const data = await res.json();
+        setNutritionOptions(data);
+        setNutRecFormData((current) => ({
+          ...current,
+          breed: data.Breed?.includes(current.breed) ? current.breed : data.Breed?.[0],
+          category: data.Category?.includes(current.category) ? current.category : data.Category?.[0],
+          activity_level: data.Activity_Level?.includes(current.activity_level) ? current.activity_level : data.Activity_Level?.[0],
+          health_status: data.Health_Status?.includes(current.health_status) ? current.health_status : data.Health_Status?.[0]
+        }));
+      } catch (err) {
+        console.error("Failed to fetch nutrition model options:", err);
+      }
+    };
+    fetchNutritionOptions();
+  }, []);
+
   const fileRef = useRef();
+  const skinFileRef = useRef();
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -231,12 +280,81 @@ export default function CattleCare() {
     }
   };
 
+  const handleSkinFile = useCallback((file) => {
+    if (!file || !file.type.startsWith("image/")) {
+      setSkinError("Please upload a valid image file (JPEG, PNG, WebP)." );
+      return;
+    }
+    setSkinError(null);
+    setSkinResult(null);
+    setSkinImageFile(file);
+    const url = URL.createObjectURL(file);
+    setSkinImage(url);
+  }, []);
+
+  const handleSkinPredict = async () => {
+    if (!skinImageFile) return;
+    setSkinLoading(true);
+    setSkinError(null);
+    setSkinResult(null);
+    setSkinModelTab("yolo");
+    try {
+      const formData = new FormData();
+      formData.append("file", skinImageFile);
+      const res = await fetch("http://127.0.0.1:8000/predict-skin-disease", {
+        method: "POST",
+        body: formData,
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.detail || "Skin disease prediction failed");
+      }
+      const data = await res.json();
+      setSkinResult(data);
+    } catch (err) {
+      setSkinError(err.message || "Could not connect to backend skin-disease endpoint.");
+    } finally {
+      setSkinLoading(false);
+    }
+  };
+
   const clearImage = () => {
     setImage(null);
     setImageFile(null);
     setResult(null);
     setError(null);
     setSelectedBreed(null);
+  };
+
+  const clearSkinImage = () => {
+    setSkinImage(null);
+    setSkinImageFile(null);
+    setSkinResult(null);
+    setSkinError(null);
+  };
+
+  const handleNutRecSubmit = async (e) => {
+    e.preventDefault();
+    setNutRecLoading(true);
+    setNutRecError(null);
+    setNutRecResult(null);
+    try {
+      const res = await fetch('http://127.0.0.1:8000/nutrition-recommendation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(nutRecFormData)
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.detail || 'Recommendation failed');
+      }
+      const data = await res.json();
+      setNutRecResult(data.recommendation);
+    } catch (err) {
+      setNutRecError(err.message || 'Could not fetch recommendation.');
+    } finally {
+      setNutRecLoading(false);
+    }
   };
 
   const triggerIngest = async () => {
@@ -651,6 +769,111 @@ export default function CattleCare() {
                 </div>
               </div>
 
+              <div className="fade-up" style={{ marginTop: 36, background: "linear-gradient(135deg, #153f2e 0%, #1d4c3a 42%, #275d49 100%)", borderRadius: 24, padding: 28, color: "#F8FAF8", boxShadow: "0 18px 40px rgba(21,63,46,0.18)", border: "1px solid rgba(255,255,255,0.12)" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 20 }}>
+                  <div>
+                    <div style={{ fontSize: 12, letterSpacing: "0.12em", fontWeight: 700, color: "#A7F3D0", textTransform: "uppercase" }}>Health Monitor</div>
+                    <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: 32, fontWeight: 700, marginTop: 6 }}>Skin Disease Prediction</h3>
+                  </div>
+                  <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                    <span style={{ background: "rgba(255,255,255,0.13)", border: "1px solid rgba(255,255,255,0.18)", padding: "8px 14px", borderRadius: 999, fontSize: 12, fontWeight: 700 }}>YOLO + ViT</span>
+                    <span style={{ background: "rgba(250,198,90,0.22)", border: "1px solid rgba(250,198,90,0.35)", padding: "8px 14px", borderRadius: 999, fontSize: 12, fontWeight: 700, color: "#FDE68A" }}>Live Health Scan</span>
+                  </div>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }} className="result-grid">
+                  <div style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.14)", borderRadius: 18, padding: 20 }}>
+                    <div
+                      className="upload-zone"
+                      onClick={() => !skinImage && skinFileRef.current?.click()}
+                      style={{ background: "rgba(255,255,255,0.04)", borderColor: "rgba(255,255,255,0.22)", color: "#F3F4F6" }}
+                    >
+                      {skinImage ? (
+                        <div>
+                          <img src={skinImage} alt="Uploaded skin image" style={{ width: "100%", maxHeight: 260, objectFit: "cover", borderRadius: 12, marginBottom: 16 }} />
+                          <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+                            <button className="btn-primary" onClick={(e) => { e.stopPropagation(); handleSkinPredict(); }} disabled={skinLoading} style={{ minWidth: 180 }}>
+                              {skinLoading ? <><div className="spinner" /> Scanning...</> : <><span>🩺</span> Predict Skin Disease</>}
+                            </button>
+                            <button className="btn-secondary" onClick={(e) => { e.stopPropagation(); clearSkinImage(); }} style={{ color: "#fff", borderColor: "rgba(255,255,255,0.6)", background: "transparent" }}>Clear</button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div>
+                          <div style={{ fontSize: 52, marginBottom: 16 }}>🩺</div>
+                          <p style={{ fontSize: 16, fontWeight: 600, color: "#F8FAF8", marginBottom: 8 }}>Drop cattle skin image here</p>
+                          <p style={{ fontSize: 14, color: "rgba(255,255,255,0.78)", marginBottom: 18 }}>Upload JPEG, PNG or WebP and compare YOLO vs ViT outputs</p>
+                          <button className="btn-primary" onClick={() => skinFileRef.current?.click()}>📂 Choose Image</button>
+                        </div>
+                      )}
+                    </div>
+                    <input ref={skinFileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={e => handleSkinFile(e.target.files[0])} />
+                  </div>
+
+                  <div style={{ background: "rgba(255,255,255,0.92)", borderRadius: 18, padding: 22, color: "#0f172a" }}>
+                    {skinError && (
+                      <div style={{ background: "#FEF2F2", border: "1px solid #FCA5A5", borderRadius: 12, padding: 16, marginBottom: 16 }}>
+                        <p style={{ color: "#B91C1C", fontSize: 14, fontWeight: 500 }}>⚠️ {skinError}</p>
+                      </div>
+                    )}
+
+                    {!skinResult && !skinError && (
+                      <div style={{ border: "1px dashed #C7D2FE", borderRadius: 14, padding: 28, textAlign: "center", minHeight: 260, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", background: "#F8FAFC" }}>
+                        <div style={{ fontSize: 42, marginBottom: 12 }}>🧠</div>
+                        <p style={{ color: "#64748B", fontSize: 15 }}>Upload a skin image to see both model predictions.</p>
+                      </div>
+                    )}
+
+                    {skinResult && (
+                      <div className="fade-up">
+                        <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+                          <button className={`tab-btn ${skinModelTab === "yolo" ? "active" : ""}`} onClick={() => setSkinModelTab("yolo")}>
+                            🟢 YOLO
+                          </button>
+                          <button className={`tab-btn ${skinModelTab === "vit" ? "active" : ""}`} onClick={() => setSkinModelTab("vit")}>
+                            🟣 ViT
+                          </button>
+                        </div>
+
+                        <div style={{ background: "linear-gradient(135deg, #0f766e, #134e4a)", borderRadius: 16, padding: 22, color: "#fff", marginBottom: 16 }}>
+                          <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.10em", color: "#A7F3D0", textTransform: "uppercase", marginBottom: 8 }}>
+                            {skinModelTab === "yolo" ? "YOLO Prediction" : "ViT Prediction"}
+                          </div>
+                          <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 28, fontWeight: 700, marginBottom: 6 }}>
+                            {skinModelTab === "yolo" ? skinResult.yolo?.predicted_class : skinResult.vit?.predicted_class}
+                          </div>
+                          <div style={{ fontSize: 13, color: "rgba(255,255,255,0.78)", marginBottom: 16 }}>{skinResult.filename || "skin-image"}</div>
+                          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                            <div style={{ flex: 1, height: 8, borderRadius: 999, background: "rgba(255,255,255,0.17)", overflow: "hidden" }}>
+                              <div style={{ width: `${((skinModelTab === "yolo" ? skinResult.yolo?.confidence : skinResult.vit?.confidence) * 100).toFixed(0)}%`, height: "100%", background: "#FDE68A", borderRadius: 999 }} />
+                            </div>
+                            <div style={{ fontSize: 19, fontWeight: 700, color: "#FDE68A" }}>
+                              {(((skinModelTab === "yolo" ? skinResult.yolo?.confidence : skinResult.vit?.confidence) || 0) * 100).toFixed(1)}%
+                            </div>
+                          </div>
+                          <div style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", marginTop: 4 }}>Confidence score</div>
+                        </div>
+
+                        <div style={{ background: "#F8FAFC", borderRadius: 16, padding: 18, border: "1px solid #E2E8F0" }}>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: "#475569", marginBottom: 12 }}>Top 5 Predictions</div>
+                          {(skinModelTab === "yolo" ? [skinResult.yolo] : skinResult.vit?.top5 || []).map((item, idx) => (
+                            <div key={idx} style={{ marginBottom: 10 }}>
+                              <div style={{ display: "flex", justifyContent: "space-between", gap: 12, marginBottom: 4 }}> 
+                                <span style={{ fontSize: 13, color: "#0f172a", fontWeight: idx === 0 ? 700 : 500 }}>{skinModelTab === "yolo" ? skinResult.yolo?.predicted_class : item.class}</span>
+                                <span style={{ fontSize: 13, color: "#475569", fontWeight: 600 }}>{skinModelTab === "yolo" ? `${(skinResult.yolo?.confidence * 100).toFixed(1)}%` : `${(item.confidence * 100).toFixed(1)}%`}</span>
+                              </div>
+                              <div className="confidence-bar">
+                                <div className="confidence-fill" style={{ width: `${skinModelTab === "yolo" ? (skinResult.yolo?.confidence * 100).toFixed(0) : (item.confidence * 100).toFixed(0)}%`, background: idx === 0 ? "linear-gradient(90deg, #0f766e, #2dd4bf)" : "#CBD5E1" }} />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
               {/* Expanded breed detail on Identify page */}
               {selectedBreed && (
                 <div className="fade-up" style={{ background: "#fff", border: "2px solid #1B4332", borderRadius: 20, padding: 40, marginTop: 32 }}>
@@ -793,67 +1016,161 @@ export default function CattleCare() {
           {/* ════ TAB 3: NUTRITION ════ */}
           {activeTab === "nutrition" && (
             <div className="fade-up">
-              <div style={{ textAlign: "center", marginBottom: 32 }}>
-                <div className="section-eyebrow">Interactive Feeding Advisor</div>
-                <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 36, fontWeight: 700, color: "#1B4332", marginBottom: 12 }}>Cattle Care AI Advisor</h2>
-                <p style={{ color: "#6B7280", fontSize: 16, maxWidth: 520, margin: "0 auto" }}>
-                  Ask questions regarding cattle breeds, daily Dry Matter Intake, energy density, or custom nutrition routines.
+              <div style={{ textAlign: "center", marginBottom: 48 }}>
+                <div className="section-eyebrow">Nutrition & Feeding Guide</div>
+                <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 36, fontWeight: 700, color: "#1B4332", marginBottom: 12 }}>Personalized Nutrition Planning</h2>
+                <p style={{ color: "#6B7280", fontSize: 16, maxWidth: 620, margin: "0 auto" }}>
+                  Get AI-powered ration recommendations based on health status, or chat with our advisor for general nutrition guidance.
                 </p>
               </div>
 
-              {/* Document Ingestion Status Banner */}
-              <div style={{
-                maxWidth: 850,
-                margin: "0 auto 24px",
-                background: ingestStatus === "loading" ? "#FEF3E2" : ingestStatus === "success" ? "#F0F7F4" : ingestStatus === "error" ? "#FEF2F2" : "#FFF",
-                border: `1.5px solid ${ingestStatus === "loading" ? "#F5D89E" : ingestStatus === "success" ? "#C3D9CF" : ingestStatus === "error" ? "#FCA5A5" : "#E8E0D5"}`,
-                borderRadius: 12,
-                padding: "14px 20px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                gap: 12,
-                flexWrap: "wrap",
-                boxShadow: "0 2px 10px rgba(0,0,0,0.01)"
-              }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <span style={{ fontSize: 20 }}>
-                    {ingestStatus === "loading" ? "⏳" : ingestStatus === "success" ? "✅" : ingestStatus === "error" ? "❌" : "📚"}
-                  </span>
-                  <div>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: ingestStatus === "success" ? "#1B4332" : ingestStatus === "error" ? "#B91C1C" : "#374151" }}>
-                      {ingestStatus === "loading" && "Ingesting nutrition documents..."}
-                      {ingestStatus === "success" && "Documents Ingested Successfully"}
-                      {ingestStatus === "error" && "Document Ingestion Failed"}
-                      {ingestStatus === "idle" && "Ready to ingest nutrition documents"}
-                    </div>
-                    <div style={{ fontSize: 12, color: "#6B7280", marginTop: 2 }}>
-                      {ingestStatus === "loading" && "We are converting and indexing the PDF documents in the backend."}
-                      {ingestStatus === "success" && "Vector store is ready. You can query breed-specific routines now."}
-                      {ingestStatus === "error" && (ingestError || "Check if backend server is running and the Artifacts folder exists.")}
-                      {ingestStatus === "idle" && "Click the button to manually trigger indexing."}
-                    </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 32, maxWidth: 1200, margin: "0 auto" }} className="result-grid">
+                {/* ═══ NUTRITION RECOMMENDATION ═══ */}
+                <div className="fade-up" style={{ width: "100%" }}>
+                  <div style={{ background: "linear-gradient(135deg, #1d4c3a 0%, #205840 100%)", borderRadius: 20, padding: 28, color: "#fff", boxShadow: "0 10px 30px rgba(29,76,58,0.2)" }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.12em", color: "#A7F3D0", textTransform: "uppercase", marginBottom: 8 }}>🤖 ML-Powered</div>
+                    <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: 28, fontWeight: 700, marginBottom: 24, color: "#fff" }}>Nutrition Recommendation</h3>
+
+                    <form onSubmit={handleNutRecSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                      <div>
+                        <label style={{ fontSize: 11, fontWeight: 700, color: "#A7F3D0", display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>Breed</label>
+                        <select
+                          value={nutRecFormData.breed}
+                          onChange={(e) => setNutRecFormData({...nutRecFormData, breed: e.target.value})}
+                          style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.2)", background: "rgba(255,255,255,0.08)", color: "#fff", fontSize: 13, fontFamily: "inherit" }}
+                        >
+                          {nutritionOptions.Breed.map(b => <option key={b} value={b}>{b}</option>)}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label style={{ fontSize: 11, fontWeight: 700, color: "#A7F3D0", display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>Category</label>
+                        <select
+                          value={nutRecFormData.category}
+                          onChange={(e) => setNutRecFormData({...nutRecFormData, category: e.target.value})}
+                          style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.2)", background: "rgba(255,255,255,0.08)", color: "#fff", fontSize: 13, fontFamily: "inherit" }}
+                        >
+                          {nutritionOptions.Category.map(c => <option key={c} value={c}>{c}</option>)}
+                        </select>
+                      </div>
+
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                        <div>
+                          <label style={{ fontSize: 11, fontWeight: 700, color: "#A7F3D0", display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>Weight (kg)</label>
+                          <input
+                            type="number"
+                            step="0.1"
+                            value={nutRecFormData.weight_kg}
+                            onChange={(e) => setNutRecFormData({...nutRecFormData, weight_kg: parseFloat(e.target.value)})}
+                            style={{ width: "100%", padding: "8px 10px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.2)", background: "rgba(255,255,255,0.08)", color: "#fff", fontSize: 13, fontFamily: "inherit" }}
+                          />
+                        </div>
+                        <div>
+                          <label style={{ fontSize: 11, fontWeight: 700, color: "#A7F3D0", display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>Age (mo)</label>
+                          <input
+                            type="number"
+                            step="1"
+                            value={nutRecFormData.age_months}
+                            onChange={(e) => setNutRecFormData({...nutRecFormData, age_months: parseFloat(e.target.value)})}
+                            style={{ width: "100%", padding: "8px 10px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.2)", background: "rgba(255,255,255,0.08)", color: "#fff", fontSize: 13, fontFamily: "inherit" }}
+                          />
+                        </div>
+                      </div>
+
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                        <div>
+                          <label style={{ fontSize: 11, fontWeight: 700, color: "#A7F3D0", display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>Milk (L/day)</label>
+                          <input
+                            type="number"
+                            step="0.1"
+                            value={nutRecFormData.milk_yield_l}
+                            onChange={(e) => setNutRecFormData({...nutRecFormData, milk_yield_l: parseFloat(e.target.value)})}
+                            style={{ width: "100%", padding: "8px 10px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.2)", background: "rgba(255,255,255,0.08)", color: "#fff", fontSize: 13, fontFamily: "inherit" }}
+                          />
+                        </div>
+                        <div>
+                          <label style={{ fontSize: 11, fontWeight: 700, color: "#A7F3D0", display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>BCS (1-5)</label>
+                          <input
+                            type="number"
+                            step="0.1"
+                            min="1"
+                            max="5"
+                            value={nutRecFormData.bcs}
+                            onChange={(e) => setNutRecFormData({...nutRecFormData, bcs: parseFloat(e.target.value)})}
+                            style={{ width: "100%", padding: "8px 10px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.2)", background: "rgba(255,255,255,0.08)", color: "#fff", fontSize: 13, fontFamily: "inherit" }}
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label style={{ fontSize: 11, fontWeight: 700, color: "#A7F3D0", display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>Activity Level</label>
+                        <select
+                          value={nutRecFormData.activity_level}
+                          onChange={(e) => setNutRecFormData({...nutRecFormData, activity_level: e.target.value})}
+                          style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.2)", background: "rgba(255,255,255,0.08)", color: "#fff", fontSize: 13, fontFamily: "inherit" }}
+                        >
+                          {nutritionOptions.Activity_Level.map(a => <option key={a} value={a}>{a}</option>)}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label style={{ fontSize: 11, fontWeight: 700, color: "#A7F3D0", display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>Health Status ⚠️</label>
+                        <select
+                          value={nutRecFormData.health_status}
+                          onChange={(e) => setNutRecFormData({...nutRecFormData, health_status: e.target.value})}
+                          style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.2)", background: "rgba(255,255,255,0.08)", color: "#fff", fontSize: 13, fontFamily: "inherit" }}
+                        >
+                          {nutritionOptions.Health_Status.map(h => <option key={h} value={h}>{h}</option>)}
+                        </select>
+                      </div>
+
+                      <button
+                        type="submit"
+                        disabled={nutRecLoading}
+                        style={{ width: "100%", marginTop: 8, padding: "12px 16px", borderRadius: 10, border: "none", background: nutRecLoading ? "rgba(166,243,208,0.3)" : "#A7F3D0", color: "#0d5a56", fontWeight: 700, fontSize: 14, cursor: nutRecLoading ? "not-allowed" : "pointer", transition: "all 0.2s" }}
+                      >
+                        {nutRecLoading ? <>⏳ Analyzing...</> : <>🎯 Get Recommendation</>}
+                      </button>
+                    </form>
+
+                    {nutRecError && (
+                      <div style={{ background: "rgba(239,68,68,0.2)", border: "1px solid rgba(239,68,68,0.5)", borderRadius: 8, padding: 12, marginTop: 16 }}>
+                        <p style={{ fontSize: 12, color: "#FCA5A5", margin: 0 }}>❌ {nutRecError}</p>
+                      </div>
+                    )}
+
+                    {nutRecResult && (
+                      <div className="fade-up" style={{ background: "linear-gradient(135deg, #A7F3D0 0%, #6EE7B7 100%)", borderRadius: 12, padding: 18, marginTop: 16 }}>
+                        <div style={{ fontSize: 10, fontWeight: 700, color: "#0d5a56", textTransform: "uppercase", letterSpacing: "0.10em", marginBottom: 12 }}>✓ Daily Nutrient Targets</div>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                          {[
+                            ["Dry Matter", `${nutRecResult.DMI_kg_per_day} kg/day`],
+                            ["Crude Protein", `${nutRecResult.CrudeProtein_pct_DM}% DM`],
+                            ["TDN", `${nutRecResult.TDN_pct_DM}% DM`],
+                            ["Calcium", `${nutRecResult.Calcium_g_per_day} g/day`],
+                            ["Phosphorus", `${nutRecResult.Phosphorus_g_per_day} g/day`],
+                            ["Water", `${nutRecResult.Water_L_per_day} L/day`]
+                          ].map(([label, value]) => (
+                            <div key={label} style={{ background: "rgba(255,255,255,0.45)", borderRadius: 8, padding: "9px 10px" }}>
+                              <div style={{ fontSize: 10, color: "#17635d", marginBottom: 3 }}>{label}</div>
+                              <div style={{ fontSize: 16, fontWeight: 700, color: "#0d5a56" }}>{value}</div>
+                            </div>
+                          ))}
+                        </div>
+                        {nutRecResult.Special_Care_Notes && (
+                          <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid rgba(13,90,86,0.2)", color: "#0d5a56", fontSize: 12, lineHeight: 1.55 }}>
+                            <strong>Special care:</strong> {nutRecResult.Special_Care_Notes}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
-                <button
-                  className="btn-secondary"
-                  onClick={triggerIngest}
-                  disabled={isIngesting}
-                  style={{
-                    fontSize: 12,
-                    padding: "6px 14px",
-                    borderColor: ingestStatus === "success" ? "#C3D9CF" : "#1B4332",
-                    color: ingestStatus === "success" ? "#52796F" : "#1B4332",
-                    cursor: isIngesting ? "not-allowed" : "pointer"
-                  }}
-                >
-                  {isIngesting ? "Ingesting..." : "Re-Ingest Data"}
-                </button>
-              </div>
 
-              {/* Chat Container */}
+                {/* ═══ RAG CHAT ADVISOR ═══ */}
+                <div style={{ width: "100%" }}>
               <div style={{
-                maxWidth: 850,
+                width: "100%",
                 margin: "0 auto",
                 background: "#fff",
                 border: "1px solid #E8E0D5",
@@ -1048,6 +1365,56 @@ export default function CattleCare() {
                 </form>
               </div>
             </div>
+
+            {/* Document Ingestion Status Banner */}
+            <div style={{
+              background: ingestStatus === "loading" ? "#FEF3E2" : ingestStatus === "success" ? "#F0F7F4" : ingestStatus === "error" ? "#FEF2F2" : "#FFF",
+              border: `1.5px solid ${ingestStatus === "loading" ? "#F5D89E" : ingestStatus === "success" ? "#C3D9CF" : ingestStatus === "error" ? "#FCA5A5" : "#E8E0D5"}`,
+              borderRadius: 12,
+              padding: "14px 20px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 12,
+              flexWrap: "wrap",
+              boxShadow: "0 2px 10px rgba(0,0,0,0.01)",
+              marginTop: 32
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={{ fontSize: 20 }}>
+                  {ingestStatus === "loading" ? "⏳" : ingestStatus === "success" ? "✅" : ingestStatus === "error" ? "❌" : "📚"}
+                </span>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: ingestStatus === "success" ? "#1B4332" : ingestStatus === "error" ? "#B91C1C" : "#374151" }}>
+                    {ingestStatus === "loading" && "Ingesting nutrition documents..."}
+                    {ingestStatus === "success" && "Documents Ingested Successfully"}
+                    {ingestStatus === "error" && "Document Ingestion Failed"}
+                    {ingestStatus === "idle" && "Ready to ingest nutrition documents"}
+                  </div>
+                  <div style={{ fontSize: 12, color: "#6B7280", marginTop: 2 }}>
+                    {ingestStatus === "loading" && "We are converting and indexing the PDF documents in the backend."}
+                    {ingestStatus === "success" && "Vector store is ready. You can query breed-specific routines now."}
+                    {ingestStatus === "error" && (ingestError || "Check if backend server is running and the Artifacts folder exists.")}
+                    {ingestStatus === "idle" && "Click the button to manually trigger indexing."}
+                  </div>
+                </div>
+              </div>
+              <button
+                className="btn-secondary"
+                onClick={triggerIngest}
+                disabled={isIngesting}
+                style={{
+                  fontSize: 12,
+                  padding: "6px 14px",
+                  borderColor: ingestStatus === "success" ? "#C3D9CF" : "#1B4332",
+                  color: ingestStatus === "success" ? "#52796F" : "#1B4332",
+                  cursor: isIngesting ? "not-allowed" : "pointer"
+                }}
+              >
+                {isIngesting ? "Ingesting..." : "Re-Ingest Data"}
+              </button>
+            </div>
+            </div>\n            </div>
           )}
         </div>
 

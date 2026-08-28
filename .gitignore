@@ -1,0 +1,18 @@
+# Python
+BACKEND/venv/
+BACKEND/.venv/
+BACKEND/__pycache__/
+BACKEND/*.pyc
+BACKEND/.env
+
+# Models & datasets — too large for git, go to Azure Files instead
+BACKEND/MODELS/
+BACKEND/cattle_dataset/
+BACKEND/THE_FINAL_CATTLE_SKIN_DATASET/
+
+# Frontend
+FRONTEND/node_modules/
+FRONTEND/dist/
+
+# OS
+.DS_Store
