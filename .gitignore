@@ -1,0 +1,24 @@
+# Python virtual environment
+BACKEND/MY_SPACE/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Environment / secrets
+BACKEND/.env
+
+# Machine Learning model files
+BACKEND/MODELS/**/*.pt
+BACKEND/MODELS/**/*.pth
+BACKEND/MODELS/**/*.pkl
+
+# Node
+FRONTEND/node_modules/
+FRONTEND/dist/
+
+# VS Code
+.vscode/
+
+# Logs
+*.log

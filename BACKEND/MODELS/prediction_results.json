@@ -1,0 +1,237 @@
+[
+  {
+    "image": "cattle_dataset\\val\\Amritmahal\\Amritmahal_1.JPG",
+    "yolo": [
+      {
+        "class": "Deoni",
+        "confidence": 0.645668089389801
+      },
+      {
+        "class": "Himachali Pahari",
+        "confidence": 0.18479812145233154
+      },
+      {
+        "class": "Ladakhi",
+        "confidence": 0.037143707275390625
+      },
+      {
+        "class": "Punganur",
+        "confidence": 0.02881065011024475
+      },
+      {
+        "class": "Konkan Kapila",
+        "confidence": 0.01918148249387741
+      }
+    ],
+    "vit": [
+      {
+        "class": "Amritmahal",
+        "confidence": 0.9596156477928162
+      },
+      {
+        "class": "Hariana",
+        "confidence": 0.006012811325490475
+      },
+      {
+        "class": "Hallikar",
+        "confidence": 0.0054471613839268684
+      },
+      {
+        "class": "Umblachery",
+        "confidence": 0.003355951514095068
+      },
+      {
+        "class": "Malnad_gidda",
+        "confidence": 0.0027260298375040293
+      }
+    ]
+  },
+  {
+    "image": "cattle_dataset\\val\\Amritmahal\\Amritmahal_16.jpg",
+    "yolo": [
+      {
+        "class": "Kangayam",
+        "confidence": 0.5478693842887878
+      },
+      {
+        "class": "Vechur",
+        "confidence": 0.2735244631767273
+      },
+      {
+        "class": "Kankrej",
+        "confidence": 0.07950244098901749
+      },
+      {
+        "class": "Khillari",
+        "confidence": 0.04732270911335945
+      },
+      {
+        "class": "Gir",
+        "confidence": 0.014049849472939968
+      }
+    ],
+    "vit": [
+      {
+        "class": "Amritmahal",
+        "confidence": 0.9592257142066956
+      },
+      {
+        "class": "Khillari",
+        "confidence": 0.0074950410053133965
+      },
+      {
+        "class": "Kangayam",
+        "confidence": 0.004821916576474905
+      },
+      {
+        "class": "gaolao",
+        "confidence": 0.00240536592900753
+      },
+      {
+        "class": "Kankrej",
+        "confidence": 0.0018714902689680457
+      }
+    ]
+  },
+  {
+    "image": "cattle_dataset\\val\\Amritmahal\\Amritmahal_49.jpg",
+    "yolo": [
+      {
+        "class": "Amritmahal",
+        "confidence": 0.8850076794624329
+      },
+      {
+        "class": "Kangayam",
+        "confidence": 0.05945742875337601
+      },
+      {
+        "class": "Brown Swiss cattle",
+        "confidence": 0.026295842602849007
+      },
+      {
+        "class": "Ayrshire",
+        "confidence": 0.00853311363607645
+      },
+      {
+        "class": "Hallikar",
+        "confidence": 0.0068733906373381615
+      }
+    ],
+    "vit": [
+      {
+        "class": "Hallikar",
+        "confidence": 0.3901445269584656
+      },
+      {
+        "class": "Bargur",
+        "confidence": 0.15011382102966309
+      },
+      {
+        "class": "Pulikulam",
+        "confidence": 0.08785174041986465
+      },
+      {
+        "class": "Rathi",
+        "confidence": 0.06999459117650986
+      },
+      {
+        "class": "Kangayam",
+        "confidence": 0.058346670120954514
+      }
+    ]
+  },
+  {
+    "image": "cattle_dataset\\val\\Amritmahal\\Amritmahal_52.jpg",
+    "yolo": [
+      {
+        "class": "Brown Swiss cattle",
+        "confidence": 0.35387375950813293
+      },
+      {
+        "class": "Holstein Friesian cattle",
+        "confidence": 0.23610112071037292
+      },
+      {
+        "class": "Jersey cattle",
+        "confidence": 0.17395056784152985
+      },
+      {
+        "class": "Red Dane cattle",
+        "confidence": 0.05079688876867294
+      },
+      {
+        "class": "dagri",
+        "confidence": 0.02515939250588417
+      }
+    ],
+    "vit": [
+      {
+        "class": "Amritmahal",
+        "confidence": 0.942143976688385
+      },
+      {
+        "class": "Malnad_gidda",
+        "confidence": 0.011685647070407867
+      },
+      {
+        "class": "Brown Swiss cattle",
+        "confidence": 0.00540043693035841
+      },
+      {
+        "class": "Pulikulam",
+        "confidence": 0.0038267774507403374
+      },
+      {
+        "class": "Bargur",
+        "confidence": 0.00344871636480093
+      }
+    ]
+  },
+  {
+    "image": "cattle_dataset\\val\\Amritmahal\\Amritmahal_58.jpg",
+    "yolo": [
+      {
+        "class": "malvi",
+        "confidence": 0.35364386439323425
+      },
+      {
+        "class": "ghumsari",
+        "confidence": 0.18850962817668915
+      },
+      {
+        "class": "gaolao",
+        "confidence": 0.18049313127994537
+      },
+      {
+        "class": "Deoni",
+        "confidence": 0.0889512374997139
+      },
+      {
+        "class": "Kangayam",
+        "confidence": 0.05707322433590889
+      }
+    ],
+    "vit": [
+      {
+        "class": "Amritmahal",
+        "confidence": 0.9757307767868042
+      },
+      {
+        "class": "nagori",
+        "confidence": 0.00515371561050415
+      },
+      {
+        "class": "Krishna_Valley",
+        "confidence": 0.0046408046036958694
+      },
+      {
+        "class": "malvi",
+        "confidence": 0.0022885838989168406
+      },
+      {
+        "class": "kherigarh",
+        "confidence": 0.00179201306309551
+      }
+    ]
+  }
+]

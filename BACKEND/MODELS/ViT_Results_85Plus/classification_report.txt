@@ -1,0 +1,63 @@
+Standard Test Accuracy: 0.7105
+TTA Test Accuracy:      0.7203
+
+                          precision    recall  f1-score   support
+
+              Amritmahal       0.55      0.55      0.55        20
+                Ayrshire       0.96      0.77      0.86        35
+                  Bargur       0.90      0.90      0.90        20
+      Brown Swiss cattle       0.94      0.91      0.93        35
+                   Dangi       0.86      0.89      0.87        27
+                   Deoni       0.83      0.62      0.71        16
+                     Gir       0.76      0.72      0.74        53
+                Hallikar       0.74      0.63      0.68        27
+                 Hariana       0.44      0.42      0.43        19
+        Himachali Pahari       0.73      0.85      0.79        26
+Holstein Friesian cattle       0.97      0.95      0.96        38
+           Jersey cattle       0.85      0.89      0.87        38
+                Kangayam       0.68      0.73      0.70        26
+                 Kankrej       0.86      0.93      0.89        27
+                Kenkatha       1.00      0.78      0.88        27
+                 Khariar       0.70      0.95      0.81        20
+                Khillari       0.69      0.65      0.67        17
+           Konkan Kapila       0.82      0.74      0.78        19
+                  Kosali       0.84      0.80      0.82        20
+          Krishna_Valley       0.27      0.30      0.29        20
+                 Ladakhi       0.83      0.79      0.81        19
+                 Lakhimi       0.65      0.71      0.68        21
+            Malnad_gidda       0.77      0.67      0.71        15
+                  Mewati       0.97      0.88      0.92        34
+                    Nari       0.60      0.67      0.63        27
+                  Nimari       0.64      0.54      0.58        13
+                  Ongole       0.62      0.46      0.53        28
+            Poda Thirupu       0.90      0.96      0.93        27
+               Pulikulam       0.71      0.56      0.62        18
+                Punganur       0.72      0.75      0.73        24
+                  Purnea       0.98      0.98      0.98        41
+                   Rathi       0.67      0.76      0.71        21
+         Red Dane cattle       0.85      0.90      0.88        31
+            Red kandhari       0.83      0.89      0.86        28
+              Red_Sindhi       0.44      0.46      0.45        24
+                 Sahiwal       0.78      0.68      0.73        63
+           Shweta Kapila       0.34      0.31      0.33        35
+              Tharparkar       0.64      0.72      0.68        32
+              Umblachery       0.79      0.89      0.84        38
+                  Vechur       0.64      0.70      0.67        20
+                 bachaur       0.26      0.42      0.32        19
+                   badri       0.58      0.69      0.63        16
+                  bhelai       1.00      0.90      0.95        20
+                   dagri       0.41      0.37      0.39        19
+               gangatari       0.43      0.39      0.41        23
+                  gaolao       0.54      0.35      0.42        20
+                ghumsari       0.67      0.54      0.60        26
+               kherigarh       0.20      0.26      0.23        19
+                   malvi       0.36      0.33      0.35        27
+                    motu       0.65      0.79      0.71        28
+                  nagori       0.60      0.67      0.63        27
+                  ponwar       0.91      0.94      0.93        34
+                    siri       0.90      0.93      0.91        28
+                  thutho       0.80      0.86      0.83        28
+
+                accuracy                           0.72      1423
+               macro avg       0.71      0.70      0.70      1423
+            weighted avg       0.73      0.72      0.72      1423
