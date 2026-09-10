@@ -2,6 +2,8 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import backgroundImage from "./background.jpg";
 import cowImage from "./cow.jpg";
 
+const API_BASE_URL = "https://cattle-intelligence-api-2026-awe3huf9e3fag6ce.centralindia-01.azurewebsites.net";
+
 const BREEDS_INFO = [
   {
     name: "Holstein",
@@ -149,7 +151,7 @@ export default function CattleCare() {
   useEffect(() => {
     const fetchBreeds = async () => {
       try {
-        const res = await fetch("http://127.0.0.1:8000/breeds");
+        const res = await fetch(`${API_BASE_URL}/breeds`);
         if (res.ok) {
           const data = await res.json();
           if (data && data.length > 0) {
@@ -200,7 +202,7 @@ export default function CattleCare() {
   useEffect(() => {
     const fetchNutritionOptions = async () => {
       try {
-        const res = await fetch("http://127.0.0.1:8000/nutrition-options");
+        const res = await fetch(`${API_BASE_URL}/nutrition-options`);
         if (!res.ok) return;
         const data = await res.json();
         setNutritionOptions(data);
@@ -263,7 +265,7 @@ export default function CattleCare() {
     try {
       const formData = new FormData();
       formData.append("file", imageFile);
-      const res = await fetch("http://127.0.0.1:8000/predict", {
+      const res = await fetch(`${API_BASE_URL}/predict`, {
         method: "POST",
         body: formData,
       });
@@ -301,7 +303,7 @@ export default function CattleCare() {
     try {
       const formData = new FormData();
       formData.append("file", skinImageFile);
-      const res = await fetch("http://127.0.0.1:8000/predict-skin-disease", {
+      const res = await fetch(`${API_BASE_URL}/predict-skin-disease`, {
         method: "POST",
         body: formData,
       });
@@ -339,7 +341,7 @@ export default function CattleCare() {
     setNutRecError(null);
     setNutRecResult(null);
     try {
-      const res = await fetch('http://127.0.0.1:8000/nutrition-recommendation', {
+      const res = await fetch(`${API_BASE_URL}/nutrition-recommendation`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(nutRecFormData)
@@ -362,7 +364,7 @@ export default function CattleCare() {
     setIngestStatus("loading");
     setIngestError(null);
     try {
-      const res = await fetch("http://127.0.0.1:8000/rag/ingest", {
+      const res = await fetch(`${API_BASE_URL}/rag/ingest`, {
         method: "POST"
       });
       if (!res.ok) {
@@ -402,7 +404,7 @@ export default function CattleCare() {
     setChatError(null);
 
     try {
-      const res = await fetch("http://127.0.0.1:8000/rag/ask", {
+      const res = await fetch(`${API_BASE_URL}/rag/ask`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -1431,7 +1433,7 @@ export default function CattleCare() {
             <div style={{ fontSize: 13 }}>
               <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 12, marginBottom: 4 }}>Powered by</p>
               <p style={{ color: "#86EFAC", fontWeight: 500 }}>ViT-Small/16 · Vision Transformer</p>
-              <p style={{ fontSize: 12, marginTop: 4, color: "rgba(255,255,255,0.35)" }}>Backend: localhost:8000</p>
+              <p style={{ fontSize: 12, marginTop: 4, color: "rgba(255,255,255,0.35)" }}>Backend: Azure API</p>
             </div>
           </div>
         </footer>
