@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 from typing import Optional
 
+from azure_models import ensure_models
 import numpy as np
 import torch
 from PIL import Image
@@ -31,7 +32,7 @@ def get_db_connection():
         port=int(os.getenv("DB_PORT", "5432")),
         database=os.getenv("DB_NAME", "PROJECT_PHASE_1"),
         user=os.getenv("DB_USER", "postgres"),
-        password=os.getenv("DB_PASSWORD", "Anand@joy21")
+        password=os.getenv("DB_PASSWORD")
     )
 
 def map_breed_to_frontend(breed_row, traits):
@@ -463,6 +464,7 @@ SKIN_VIT_TRANSFORM = transforms.Compose(
 async def startup_event():
     global YOLO_MODEL, VIT_MODEL, SKIN_VIT_MODEL, SKIN_YOLO_MODEL, CLASS_NAMES, SKIN_CLASS_NAMES
     try:
+        ensure_models()
         YOLO_MODEL = load_yolo_model()
         VIT_MODEL = load_vit_model()
         SKIN_VIT_MODEL = load_skin_disease_model()
