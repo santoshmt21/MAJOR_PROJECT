@@ -1,10 +1,13 @@
 import os
 from pathlib import Path
+
 from azure.identity import DefaultAzureCredential
 from azure.storage.blob import BlobServiceClient
 
+
 BASE_DIR = Path(__file__).resolve().parent
 MODEL_DIR = BASE_DIR / "MODELS"
+
 
 MODEL_FILES = [
     "class_names.json",
@@ -19,37 +22,67 @@ MODEL_FILES = [
 
 
 def download_blob_resumable(blob_client, local_path):
-    """Download a large Azure blob in small chunks and resume safely."""
+    """Download Azure blob safely in chunks."""
 
     properties = blob_client.get_blob_properties()
     total_size = properties.size
 
-    print(f"☁️ Blob size: {total_size / (1024 * 1024):.1f} MB")
+    print(
+        f"☁️ Blob size: "
+        f"{total_size / (1024 * 1024):.1f} MB"
+    )
 
     local_path.parent.mkdir(parents=True, exist_ok=True)
 
     temp_path = Path(str(local_path) + ".part")
 
-    # If an old partial file exists, resume from it
-    downloaded = temp_path.stat().st_size if temp_path.exists() else 0
+    # ---------------------------------------------------------
+    # IMPORTANT:
+    # Small metadata files are downloaded FRESH.
+    # This prevents corrupted JSON/PKL files from being resumed.
+    # ---------------------------------------------------------
+    if local_path.suffix.lower() in [".json", ".pkl"]:
+        if local_path.exists():
+            local_path.unlink()
 
-    # If the final file already has the correct size, use it
-    if local_path.exists() and local_path.stat().st_size == total_size:
-        print(f"✅ Already complete: {local_path.name}")
-        return
+        if temp_path.exists():
+            temp_path.unlink()
 
-    # If final file is partial from the old downloader, move it to .part
-    if local_path.exists() and local_path.stat().st_size < total_size:
-        if not temp_path.exists():
-            local_path.rename(temp_path)
-        downloaded = temp_path.stat().st_size
-
-    # Corrupt/oversized partial file
-    if downloaded > total_size:
-        temp_path.unlink()
         downloaded = 0
 
-    chunk_size = 4 * 1024 * 1024  # 4 MB
+    else:
+        # -----------------------------------------------------
+        # Large model files: resume safely if possible
+        # -----------------------------------------------------
+        downloaded = (
+            temp_path.stat().st_size
+            if temp_path.exists()
+            else 0
+        )
+
+        # Already complete
+        if (
+            local_path.exists()
+            and local_path.stat().st_size == total_size
+        ):
+            print(f"✅ Already complete: {local_path.name}")
+            return
+
+        # Old partial final file
+        if (
+            local_path.exists()
+            and local_path.stat().st_size < total_size
+        ):
+            if not temp_path.exists():
+                local_path.rename(temp_path)
+
+            downloaded = temp_path.stat().st_size
+
+        # Corrupt/oversized partial file
+        if downloaded > total_size:
+            print("⚠️ Invalid partial file. Starting fresh.")
+            temp_path.unlink()
+            downloaded = 0
 
     print(
         f"⬇️ Downloading {blob_client.blob_name} "
@@ -57,13 +90,23 @@ def download_blob_resumable(blob_client, local_path):
         f"{total_size / (1024 * 1024):.1f} MB)"
     )
 
+    chunk_size = 4 * 1024 * 1024  # 4 MB
+
+    # Append for resumable large models.
+    # Fresh files start from an empty .part file.
     with open(temp_path, "ab") as file:
+
         while downloaded < total_size:
-            length = min(chunk_size, total_size - downloaded)
+
+            length = min(
+                chunk_size,
+                total_size - downloaded
+            )
 
             print(
                 f"   📦 Downloading bytes "
-                f"{downloaded:,} - {downloaded + length - 1:,}"
+                f"{downloaded:,} - "
+                f"{downloaded + length - 1:,}"
             )
 
             stream = blob_client.download_blob(
@@ -73,6 +116,14 @@ def download_blob_resumable(blob_client, local_path):
             )
 
             data = stream.readall()
+
+            if not data:
+                raise RuntimeError(
+                    f"Azure returned empty data while downloading "
+                    f"{blob_client.blob_name} "
+                    f"at byte {downloaded}"
+                )
+
             file.write(data)
             file.flush()
 
@@ -84,26 +135,49 @@ def download_blob_resumable(blob_client, local_path):
                 f"{total_size / (1024 * 1024):.1f} MB"
             )
 
-    if temp_path.stat().st_size != total_size:
+    # ---------------------------------------------------------
+    # Verify final size
+    # ---------------------------------------------------------
+    actual_size = temp_path.stat().st_size
+
+    if actual_size != total_size:
         raise RuntimeError(
-            f"Download incomplete for {blob_client.blob_name}: "
-            f"{temp_path.stat().st_size} / {total_size} bytes"
+            f"Download incomplete for "
+            f"{blob_client.blob_name}: "
+            f"{actual_size} / {total_size} bytes"
         )
 
+    # Atomic replacement
     temp_path.replace(local_path)
 
-    print(f"✅ Downloaded: {blob_client.blob_name}")
+    print(
+        f"✅ Downloaded: "
+        f"{blob_client.blob_name}"
+    )
 
 
 def ensure_models():
-    account_url = os.getenv("AZURE_STORAGE_ACCOUNT_URL")
-    container_name = os.getenv("AZURE_STORAGE_CONTAINER", "models")
+
+    account_url = os.getenv(
+        "AZURE_STORAGE_ACCOUNT_URL"
+    )
+
+    container_name = os.getenv(
+        "AZURE_STORAGE_CONTAINER",
+        "models"
+    )
 
     if not account_url:
-        print("ℹ️ Azure Storage not configured. Using local MODELS folder.")
+        print(
+            "ℹ️ Azure Storage not configured. "
+            "Using local MODELS folder."
+        )
         return
 
-    print("☁️ Checking Azure Blob Storage for required models...")
+    print(
+        "☁️ Checking Azure Blob Storage "
+        "for required models..."
+    )
 
     credential = DefaultAzureCredential()
 
@@ -112,20 +186,29 @@ def ensure_models():
         credential=credential,
     )
 
-    container_client = blob_service_client.get_container_client(
-        container_name
+    container_client = (
+        blob_service_client
+        .get_container_client(container_name)
     )
 
     for relative_path in MODEL_FILES:
+
         local_path = MODEL_DIR / relative_path
 
-        blob_client = container_client.get_blob_client(relative_path)
+        blob_client = (
+            container_client
+            .get_blob_client(relative_path)
+        )
 
-        print(f"\n🔍 Checking: {relative_path}")
+        print(
+            f"\n🔍 Checking: {relative_path}"
+        )
 
         download_blob_resumable(
             blob_client,
             local_path,
         )
 
-    print("\n✅ All required models are available.")
+    print(
+        "\n✅ All required models are available."
+    )
