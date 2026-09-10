@@ -1,41 +1,104 @@
 import os
 from pathlib import Path
-
 from azure.identity import DefaultAzureCredential
 from azure.storage.blob import BlobServiceClient
-
 
 BASE_DIR = Path(__file__).resolve().parent
 MODEL_DIR = BASE_DIR / "MODELS"
 
-# Runtime models/files required by the application
 MODEL_FILES = [
     "class_names.json",
     "cattle_breed_model_v2/best.pt",
-
     "ViT_Results_85Plus/best_vit_small_patch16_224_cattle.pth",
-
     "SKIN_DISEASE_MODELS/VIT/vit_cattle_skin_model.pth",
     "SKIN_DISEASE_MODELS/VIT/class_names.json",
     "SKIN_DISEASE_MODELS/YOLO/best (3).pt",
-
     "NUTRITION_RECOMENDATION_MODEL/cattle_nutrition_tree.pkl",
     "NUTRITION_RECOMENDATION_MODEL/label_encoders.pkl",
 ]
 
 
+def download_blob_resumable(blob_client, local_path):
+    """Download a large Azure blob in small chunks and resume safely."""
+
+    properties = blob_client.get_blob_properties()
+    total_size = properties.size
+
+    print(f"☁️ Blob size: {total_size / (1024 * 1024):.1f} MB")
+
+    local_path.parent.mkdir(parents=True, exist_ok=True)
+
+    temp_path = Path(str(local_path) + ".part")
+
+    # If an old partial file exists, resume from it
+    downloaded = temp_path.stat().st_size if temp_path.exists() else 0
+
+    # If the final file already has the correct size, use it
+    if local_path.exists() and local_path.stat().st_size == total_size:
+        print(f"✅ Already complete: {local_path.name}")
+        return
+
+    # If final file is partial from the old downloader, move it to .part
+    if local_path.exists() and local_path.stat().st_size < total_size:
+        if not temp_path.exists():
+            local_path.rename(temp_path)
+        downloaded = temp_path.stat().st_size
+
+    # Corrupt/oversized partial file
+    if downloaded > total_size:
+        temp_path.unlink()
+        downloaded = 0
+
+    chunk_size = 4 * 1024 * 1024  # 4 MB
+
+    print(
+        f"⬇️ Downloading {blob_client.blob_name} "
+        f"({downloaded / (1024 * 1024):.1f} / "
+        f"{total_size / (1024 * 1024):.1f} MB)"
+    )
+
+    with open(temp_path, "ab") as file:
+        while downloaded < total_size:
+            length = min(chunk_size, total_size - downloaded)
+
+            print(
+                f"   📦 Downloading bytes "
+                f"{downloaded:,} - {downloaded + length - 1:,}"
+            )
+
+            stream = blob_client.download_blob(
+                offset=downloaded,
+                length=length,
+                max_concurrency=1,
+            )
+
+            data = stream.readall()
+            file.write(data)
+            file.flush()
+
+            downloaded += len(data)
+
+            print(
+                f"   ✅ Progress: "
+                f"{downloaded / (1024 * 1024):.1f} / "
+                f"{total_size / (1024 * 1024):.1f} MB"
+            )
+
+    if temp_path.stat().st_size != total_size:
+        raise RuntimeError(
+            f"Download incomplete for {blob_client.blob_name}: "
+            f"{temp_path.stat().st_size} / {total_size} bytes"
+        )
+
+    temp_path.replace(local_path)
+
+    print(f"✅ Downloaded: {blob_client.blob_name}")
+
+
 def ensure_models():
-    """
-    Download required ML models from Azure Blob Storage.
-
-    On local development, if Azure storage settings are not configured,
-    this function does nothing and the existing local MODELS folder is used.
-    """
-
     account_url = os.getenv("AZURE_STORAGE_ACCOUNT_URL")
     container_name = os.getenv("AZURE_STORAGE_CONTAINER", "models")
 
-    # Local development: use existing MODELS folder
     if not account_url:
         print("ℹ️ Azure Storage not configured. Using local MODELS folder.")
         return
@@ -43,30 +106,26 @@ def ensure_models():
     print("☁️ Checking Azure Blob Storage for required models...")
 
     credential = DefaultAzureCredential()
+
     blob_service_client = BlobServiceClient(
         account_url=account_url,
         credential=credential,
     )
 
-    container_client = blob_service_client.get_container_client(container_name)
+    container_client = blob_service_client.get_container_client(
+        container_name
+    )
 
     for relative_path in MODEL_FILES:
         local_path = MODEL_DIR / relative_path
 
-        if local_path.exists():
-            print(f"✅ Already exists: {relative_path}")
-            continue
-
-        local_path.parent.mkdir(parents=True, exist_ok=True)
-
-        print(f"⬇️ Downloading: {relative_path}")
-
         blob_client = container_client.get_blob_client(relative_path)
 
-        with open(local_path, "wb") as file:
-            download_stream = blob_client.download_blob()
-            download_stream.readinto(file)
+        print(f"\n🔍 Checking: {relative_path}")
 
-        print(f"✅ Downloaded: {relative_path}")
+        download_blob_resumable(
+            blob_client,
+            local_path,
+        )
 
-    print("✅ All required models are available.")
+    print("\n✅ All required models are available.")
