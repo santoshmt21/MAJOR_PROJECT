@@ -1,8 +1,75 @@
-:global(.hero-stats) {
-  display: grid;
+.hero {
+  flex: 1;
+  position: relative;
+  width: 100%;
+  min-height: 500px;
+  overflow: hidden;
+  background: url("../cow.jpg") center / cover no-repeat;
 }
 
-:global(.stat-card) {
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.content {
+  position: relative;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 72px 24px 80px;
+  text-align: center;
+}
+
+.eyebrow {
+  display: inline-block;
+  margin-bottom: 24px;
+  padding: 4px 16px;
+  border: 1px solid rgba(212, 131, 26, 0.4);
+  border-radius: 20px;
+  background: rgba(212, 131, 26, 0.2);
+  color: #FAC75A;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 0 0 20px;
+  color: #fff;
+  font-family: "Playfair Display", serif;
+  font-size: clamp(36px, 5vw, 60px);
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+.title span { color: #FAC75A; }
+
+.description {
+  max-width: 580px;
+  margin: 0 auto 16px;
+  color: rgba(255,255,255,0.75);
+  font-size: clamp(16px, 2vw, 20px);
+  line-height: 1.7;
+}
+
+.quote {
+  margin-bottom: 48px;
+  color: rgba(255,255,255,0.5);
+  font-size: 14px;
+  font-style: italic;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.statCard {
   background: rgba(255,255,255,0.12);
   backdrop-filter: blur(4px);
   border: 1px solid rgba(255,255,255,0.2);
@@ -11,6 +78,19 @@
   text-align: center;
 }
 
+.statValue {
+  color: #FAC75A;
+  font-family: "Playfair Display", serif;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.statLabel {
+  margin-top: 4px;
+  color: rgba(255,255,255,0.65);
+  font-size: 12px;
+}
+
 @media (max-width: 768px) {
-  :global(.hero-stats) { grid-template-columns: repeat(2, 1fr) !important; }
+  .stats { grid-template-columns: repeat(2, 1fr); }
 }
