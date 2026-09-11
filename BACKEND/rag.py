@@ -51,7 +51,7 @@ class RAGService:
         
         self.llm = ChatGroq(
             groq_api_key=groq_api_key,
-            model_name="llama-3.1-8b-instant"
+            model_name="openai/gpt-oss-20b"
         )
         
         # Define prompt template
