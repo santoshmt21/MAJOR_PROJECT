@@ -1,4 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import backgroundImage from "./background.jpg";
 import cowImage from "./cow.jpg";
 
@@ -128,8 +131,53 @@ const HERO_STATS = [
   { value: "10K+", label: "Farmers Helped" }
 ];
 
+const TAB_ROUTES = {
+  identify: "/identify",
+  breeds: "/breeds",
+  nutrition: "/nutrition"
+};
+
+const getTabFromPath = (pathname) => {
+  const tab = Object.keys(TAB_ROUTES).find((key) => TAB_ROUTES[key] === pathname);
+  return tab || "identify";
+};
+
+function MarkdownMessage({ content }) {
+  return (
+    <ReactMarkdown
+      remarkPlugins={[remarkGfm]}
+      components={{
+        p: ({ children }) => <p style={{ margin: "0 0 10px" }}>{children}</p>,
+        h1: ({ children }) => <h1 style={{ fontSize: 20, margin: "0 0 10px", color: "#1B4332" }}>{children}</h1>,
+        h2: ({ children }) => <h2 style={{ fontSize: 18, margin: "0 0 10px", color: "#1B4332" }}>{children}</h2>,
+        h3: ({ children }) => <h3 style={{ fontSize: 16, margin: "0 0 8px", color: "#1B4332" }}>{children}</h3>,
+        ul: ({ children }) => <ul style={{ margin: "6px 0 10px", paddingLeft: 20 }}>{children}</ul>,
+        ol: ({ children }) => <ol style={{ margin: "6px 0 10px", paddingLeft: 20 }}>{children}</ol>,
+        li: ({ children }) => <li style={{ marginBottom: 4 }}>{children}</li>,
+        blockquote: ({ children }) => (
+          <blockquote style={{ borderLeft: "3px solid #D4831A", margin: "8px 0", paddingLeft: 12, color: "#52796F" }}>
+            {children}
+          </blockquote>
+        ),
+        table: ({ children }) => (
+          <div style={{ overflowX: "auto", margin: "10px 0" }}>
+            <table style={{ borderCollapse: "collapse", minWidth: "100%", fontSize: 13 }}>{children}</table>
+          </div>
+        ),
+        th: ({ children }) => <th style={{ background: "#EEF5EE", border: "1px solid #D7E4DA", padding: "7px 9px", textAlign: "left", fontWeight: 700 }}>{children}</th>,
+        td: ({ children }) => <td style={{ border: "1px solid #E8E0D5", padding: "7px 9px", verticalAlign: "top" }}>{children}</td>,
+        code: ({ children }) => <code style={{ background: "#F3F4F6", borderRadius: 4, padding: "2px 5px", fontSize: 12 }}>{children}</code>
+      }}
+    >
+      {content.replace(/<br\s*\/?>/gi, "\n")}
+    </ReactMarkdown>
+  );
+}
+
 export default function CattleCare() {
-  const [activeTab, setActiveTab] = useState("identify");
+  const location = useLocation();
+  const navigate = useNavigate();
+  const activeTab = getTabFromPath(location.pathname);
   const [image, setImage] = useState(null);
   const [imageFile, setImageFile] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -198,6 +246,13 @@ export default function CattleCare() {
   const [nutRecLoading, setNutRecLoading] = useState(false);
   const [nutRecResult, setNutRecResult] = useState(null);
   const [nutRecError, setNutRecError] = useState(null);
+
+  useEffect(() => {
+    const tab = getTabFromPath(location.pathname);
+    if (location.pathname !== TAB_ROUTES[tab]) {
+      navigate(TAB_ROUTES.identify, { replace: true });
+    }
+  }, [location.pathname, navigate]);
 
   useEffect(() => {
     const fetchNutritionOptions = async () => {
@@ -385,8 +440,8 @@ export default function CattleCare() {
   };
 
   const handleTabChange = (tab) => {
-    setActiveTab(tab);
     setSelectedBreed(null);
+    navigate(TAB_ROUTES[tab]);
     if (tab === "nutrition") {
       triggerIngest();
     }
@@ -498,6 +553,17 @@ export default function CattleCare() {
           .hero-stats { grid-template-columns: repeat(2, 1fr) !important; }
           .breed-grid { grid-template-columns: 1fr !important; }
           .result-grid { grid-template-columns: 1fr !important; }
+          .footer-content { flex-direction: column !important; align-items: flex-start !important; }
+          .footer-meta { align-items: flex-start !important; flex-wrap: wrap !important; }
+        }
+        .nutrition-select {
+          appearance: auto;
+          min-height: 40px;
+          color-scheme: dark;
+        }
+        .nutrition-select option {
+          background: #ffffff;
+          color: #1f2937;
         }
       `}</style>
 
@@ -562,22 +628,6 @@ export default function CattleCare() {
                 </div>
               ))}
             </div>
-          </div>
-        </div>
-
-        {/* ─── TAB BAR ─── */}
-        <div style={{ background: "#fff", borderBottom: "1px solid #E8E0D5", position: "sticky", top: 64, zIndex: 90 }}>
-          <div style={{ width: "100%", padding: "0 24px", display: "flex", gap: 8, overflowX: "auto" }}>
-            {[
-              { id: "identify", label: "🔍 Identify Breed", desc: "Upload & predict" },
-              { id: "breeds", label: "📚 Breed Library", desc: "Explore breeds" },
-              { id: "nutrition", label: "🌾 Nutrition Guide", desc: "Feeding tips" }
-            ].map(t => (
-              <button key={t.id} className={`tab-btn ${activeTab === t.id ? "active" : ""}`}
-                onClick={() => handleTabChange(t.id)} style={{ whiteSpace: "nowrap" }}>
-                {t.label}
-              </button>
-            ))}
           </div>
         </div>
 
@@ -1037,6 +1087,7 @@ export default function CattleCare() {
                       <div>
                         <label style={{ fontSize: 11, fontWeight: 700, color: "#A7F3D0", display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>Breed</label>
                         <select
+                          className="nutrition-select"
                           value={nutRecFormData.breed}
                           onChange={(e) => setNutRecFormData({...nutRecFormData, breed: e.target.value})}
                           style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.2)", background: "rgba(255,255,255,0.08)", color: "#fff", fontSize: 13, fontFamily: "inherit" }}
@@ -1048,6 +1099,7 @@ export default function CattleCare() {
                       <div>
                         <label style={{ fontSize: 11, fontWeight: 700, color: "#A7F3D0", display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>Category</label>
                         <select
+                          className="nutrition-select"
                           value={nutRecFormData.category}
                           onChange={(e) => setNutRecFormData({...nutRecFormData, category: e.target.value})}
                           style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.2)", background: "rgba(255,255,255,0.08)", color: "#fff", fontSize: 13, fontFamily: "inherit" }}
@@ -1107,6 +1159,7 @@ export default function CattleCare() {
                       <div>
                         <label style={{ fontSize: 11, fontWeight: 700, color: "#A7F3D0", display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>Activity Level</label>
                         <select
+                          className="nutrition-select"
                           value={nutRecFormData.activity_level}
                           onChange={(e) => setNutRecFormData({...nutRecFormData, activity_level: e.target.value})}
                           style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.2)", background: "rgba(255,255,255,0.08)", color: "#fff", fontSize: 13, fontFamily: "inherit" }}
@@ -1118,6 +1171,7 @@ export default function CattleCare() {
                       <div>
                         <label style={{ fontSize: 11, fontWeight: 700, color: "#A7F3D0", display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>Health Status ⚠️</label>
                         <select
+                          className="nutrition-select"
                           value={nutRecFormData.health_status}
                           onChange={(e) => setNutRecFormData({...nutRecFormData, health_status: e.target.value})}
                           style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.2)", background: "rgba(255,255,255,0.08)", color: "#fff", fontSize: 13, fontFamily: "inherit" }}
@@ -1248,10 +1302,9 @@ export default function CattleCare() {
                           padding: "12px 18px",
                           fontSize: 14,
                           lineHeight: 1.5,
-                          whiteSpace: "pre-wrap",
                           boxShadow: "0 2px 8px rgba(0,0,0,0.02)"
                         }}>
-                          {msg.content}
+                          {isUser ? msg.content : <MarkdownMessage content={msg.content} />}
                         </div>
                         <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 4, padding: "0 4px" }}>
                           {isUser ? "You" : "CattleCare Advisor"}
@@ -1368,72 +1421,24 @@ export default function CattleCare() {
               </div>
             </div>
 
-            {/* Document Ingestion Status Banner */}
-            <div style={{
-              background: ingestStatus === "loading" ? "#FEF3E2" : ingestStatus === "success" ? "#F0F7F4" : ingestStatus === "error" ? "#FEF2F2" : "#FFF",
-              border: `1.5px solid ${ingestStatus === "loading" ? "#F5D89E" : ingestStatus === "success" ? "#C3D9CF" : ingestStatus === "error" ? "#FCA5A5" : "#E8E0D5"}`,
-              borderRadius: 12,
-              padding: "14px 20px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: 12,
-              flexWrap: "wrap",
-              boxShadow: "0 2px 10px rgba(0,0,0,0.01)",
-              marginTop: 32
-            }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={{ fontSize: 20 }}>
-                  {ingestStatus === "loading" ? "⏳" : ingestStatus === "success" ? "✅" : ingestStatus === "error" ? "❌" : "📚"}
-                </span>
-                <div>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: ingestStatus === "success" ? "#1B4332" : ingestStatus === "error" ? "#B91C1C" : "#374151" }}>
-                    {ingestStatus === "loading" && "Ingesting nutrition documents..."}
-                    {ingestStatus === "success" && "Documents Ingested Successfully"}
-                    {ingestStatus === "error" && "Document Ingestion Failed"}
-                    {ingestStatus === "idle" && "Ready to ingest nutrition documents"}
-                  </div>
-                  <div style={{ fontSize: 12, color: "#6B7280", marginTop: 2 }}>
-                    {ingestStatus === "loading" && "We are converting and indexing the PDF documents in the backend."}
-                    {ingestStatus === "success" && "Vector store is ready. You can query breed-specific routines now."}
-                    {ingestStatus === "error" && (ingestError || "Check if backend server is running and the Artifacts folder exists.")}
-                    {ingestStatus === "idle" && "Click the button to manually trigger indexing."}
-                  </div>
-                </div>
-              </div>
-              <button
-                className="btn-secondary"
-                onClick={triggerIngest}
-                disabled={isIngesting}
-                style={{
-                  fontSize: 12,
-                  padding: "6px 14px",
-                  borderColor: ingestStatus === "success" ? "#C3D9CF" : "#1B4332",
-                  color: ingestStatus === "success" ? "#52796F" : "#1B4332",
-                  cursor: isIngesting ? "not-allowed" : "pointer"
-                }}
-              >
-                {isIngesting ? "Ingesting..." : "Re-Ingest Data"}
-              </button>
-            </div>
-            </div>\n            </div>
+            </div>          </div>
           )}
         </div>
 
         {/* ─── FOOTER ─── */}
-        <footer style={{ background: "#111827", color: "rgba(255,255,255,0.6)", padding: "40px 24px", width: "100%" }}>
-          <div style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 20 }}>
-            <div>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+        <footer style={{ background: "#111827", color: "rgba(255,255,255,0.6)", padding: "18px 24px", width: "100%" }}>
+          <div className="footer-content" style={{ width: "100%", maxWidth: 1200, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <span style={{ fontSize: 20 }}>🐄</span>
-                <span style={{ fontFamily: "'Playfair Display', serif", color: "#fff", fontSize: 18, fontWeight: 700 }}>CattleCare</span>
+                <span style={{ fontFamily: "'Playfair Display', serif", color: "#fff", fontSize: 17, fontWeight: 700 }}>CattleCare</span>
               </div>
-              <p style={{ fontSize: 13, lineHeight: 1.6, maxWidth: 300 }}>AI-powered cattle breed intelligence for the modern farmer. Every herd counts. Every farmer matters.</p>
+              <p style={{ fontSize: 12, lineHeight: 1.4, margin: 0 }}>AI-powered cattle breed intelligence for the modern farmer.</p>
             </div>
-            <div style={{ fontSize: 13 }}>
-              <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 12, marginBottom: 4 }}>Powered by</p>
-              <p style={{ color: "#86EFAC", fontWeight: 500 }}>ViT-Small/16 · Vision Transformer</p>
-              <p style={{ fontSize: 12, marginTop: 4, color: "rgba(255,255,255,0.35)" }}>Backend: Azure API</p>
+            <div className="footer-meta" style={{ display: "flex", alignItems: "center", gap: 12, fontSize: 12 }}>
+              <span style={{ color: "rgba(255,255,255,0.4)" }}>Powered by</span>
+              <span style={{ color: "#86EFAC", fontWeight: 500 }}>ViT-Small/16 · Vision Transformer</span>
+              <span style={{ color: "rgba(255,255,255,0.35)" }}>Backend: Azure API</span>
             </div>
           </div>
         </footer>
