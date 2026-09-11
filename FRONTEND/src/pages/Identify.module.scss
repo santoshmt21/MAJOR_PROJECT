@@ -1,0 +1,33 @@
+:global(.upload-zone) {
+  border: 2px dashed #C4B89A;
+  border-radius: 16px;
+  padding: 48px 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: #FFFDF9;
+
+  &:hover {
+    border-color: #D4831A;
+    background: #FEF9F0;
+  }
+
+  &.dragging {
+    border-color: #D4831A;
+    background: #FEF3E2;
+  }
+}
+
+:global(.confidence-bar) {
+  height: 8px;
+  border-radius: 4px;
+  background: #E8E0D5;
+  overflow: hidden;
+}
+
+:global(.confidence-fill) {
+  height: 100%;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #1B4332, #52796F);
+  transition: width 1s ease;
+}

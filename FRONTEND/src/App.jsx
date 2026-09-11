@@ -1,137 +1,20 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 import backgroundImage from "./background.jpg";
 import cowImage from "./cow.jpg";
+import "./App.module.scss";
+import "./pages/Home.module.scss";
+import "./pages/Identify.module.scss";
+import "./pages/Breeds.module.scss";
+import "./pages/Nutrition.module.scss";
+import MarkdownMessage from "./components/MarkdownMessage";
+import NutritionSelect from "./components/NutritionSelect";
+import { BREEDS_INFO, HERO_STATS } from "./data/breeds";
 
 const API_BASE_URL = "https://cattle-intelligence-api-2026-awe3huf9e3fag6ce.centralindia-01.azurewebsites.net";
 
-const BREEDS_INFO = [
-  {
-    name: "Holstein",
-    origin: "Netherlands",
-    type: "Dairy",
-    weight: "580–680 kg",
-    lifespan: "20 years",
-    milk: "7,000–10,000 L/year",
-    color: "#2D5016",
-    badge: "🥛 High Milk Yield",
-    desc: "The world's highest-producing dairy cow, recognized by its distinctive black-and-white markings. Ideal for large-scale dairy farms with optimal feeding and management.",
-    traits: ["High milk yield", "Adaptable", "Docile temperament", "Feed-efficient"],
-    nutrition: {
-      dm: "22–26 kg/day",
-      protein: "16–18%",
-      energy: "1.65–1.72 Mcal NEl/kg",
-      fiber: "28–32% NDF",
-      tips: "Requires high-energy TMR diet. Supplement with bypass protein during peak lactation. Ensure adequate calcium and phosphorus to prevent milk fever."
-    }
-  },
-  {
-    name: "Gir",
-    origin: "Gujarat, India",
-    type: "Dual Purpose",
-    weight: "380–450 kg",
-    lifespan: "25 years",
-    milk: "1,200–3,500 L/year",
-    color: "#8B4513",
-    badge: "🌿 Indigenous Breed",
-    desc: "One of India's premier indigenous breeds, prized for heat tolerance and disease resistance. The Gir produces A2 milk, known for its superior digestibility and nutritional profile.",
-    traits: ["Heat tolerant", "Disease resistant", "A2 milk", "Low maintenance"],
-    nutrition: {
-      dm: "12–16 kg/day",
-      protein: "12–14%",
-      energy: "1.45–1.55 Mcal NEl/kg",
-      fiber: "35–40% NDF",
-      tips: "Thrives on crop residues and local fodder. Supplement with concentrates (1.5–2 kg) during lactation. Avoid high-grain diets to prevent acidosis."
-    }
-  },
-  {
-    name: "Sahiwal",
-    origin: "Punjab, Pakistan/India",
-    type: "Dairy",
-    weight: "350–450 kg",
-    lifespan: "22 years",
-    milk: "2,000–4,000 L/year",
-    color: "#C4872A",
-    badge: "☀️ Tropical Breed",
-    desc: "The best dairy breed among zebu cattle. Sahiwal is renowned for heat adaptation, tick resistance, and efficient milk production under tropical conditions.",
-    traits: ["Tick resistant", "High butterfat", "Efficient converter", "Calm nature"],
-    nutrition: {
-      dm: "14–18 kg/day",
-      protein: "13–15%",
-      energy: "1.50–1.62 Mcal NEl/kg",
-      fiber: "32–36% NDF",
-      tips: "Balance roughage with concentrates. Mineral supplementation critical — especially magnesium and phosphorus. Ensure salt licks year-round."
-    }
-  },
-  {
-    name: "Angus",
-    origin: "Scotland",
-    type: "Beef",
-    weight: "500–800 kg",
-    lifespan: "20 years",
-    milk: "Limited",
-    color: "#1A1A1A",
-    badge: "🥩 Premium Beef",
-    desc: "World-renowned for exceptional marbling, tenderness, and beef quality. Naturally polled with a hardy constitution, making Angus a top choice for commercial beef producers globally.",
-    traits: ["Superior marbling", "Naturally polled", "Hardy", "Early maturing"],
-    nutrition: {
-      dm: "18–22 kg/day",
-      protein: "11–13%",
-      energy: "1.28–1.42 Mcal NEg/kg",
-      fiber: "38–45% NDF",
-      tips: "Finish on high-grain diet for 90–120 days for premium marbling. Avoid over-conditioning in breeding cows. Creep feeding calves improves weaning weights."
-    }
-  },
-  {
-    name: "Jersey",
-    origin: "Jersey Island",
-    type: "Dairy",
-    weight: "360–450 kg",
-    lifespan: "20 years",
-    milk: "4,500–6,500 L/year",
-    color: "#C8A96E",
-    badge: "🧈 Highest Butterfat",
-    desc: "The Jersey's golden-tinged milk boasts the highest fat (5–6%) and protein content among major dairy breeds, making it perfect for artisan cheese and butter production.",
-    traits: ["Rich butterfat", "Small frame", "Feed efficient", "Heat tolerant"],
-    nutrition: {
-      dm: "16–20 kg/day",
-      protein: "17–19%",
-      energy: "1.62–1.70 Mcal NEl/kg",
-      fiber: "28–30% NDF",
-      tips: "Higher metabolizable protein needed due to rich milk. Prone to hypocalcemia — pre-partum anion diet essential. Avoid overfeeding — obesity risk is high in Jerseys."
-    }
-  },
-  {
-    name: "Ongole",
-    origin: "Andhra Pradesh, India",
-    type: "Draft / Beef",
-    weight: "450–650 kg",
-    lifespan: "20 years",
-    milk: "600–1,200 L/year",
-    color: "#6B7280",
-    badge: "💪 Draft Power",
-    desc: "A magnificent white-grey Indian breed exported worldwide for crossbreeding. Ongole cattle are prized for drought resistance, superior draft ability, and quality beef production.",
-    traits: ["Draft power", "Drought tolerant", "Large frame", "Disease hardy"],
-    nutrition: {
-      dm: "15–20 kg/day",
-      protein: "10–12%",
-      energy: "1.40–1.52 Mcal NEm/kg",
-      fiber: "40–48% NDF",
-      tips: "Maintains body condition on low-quality roughage. Supplement protein (urea-molasses block) in dry season. Provide shade and water during peak heat."
-    }
-  }
-];
-
-const HERO_STATS = [
-  { value: "50+", label: "Cattle Breeds" },
-  { value: "85%", label: "AI Accuracy" },
-  { value: "2s", label: "Avg. Predict Time" },
-  { value: "10K+", label: "Farmers Helped" }
-];
-
 const TAB_ROUTES = {
+  home: "/",
   identify: "/identify",
   breeds: "/breeds",
   nutrition: "/nutrition"
@@ -139,40 +22,8 @@ const TAB_ROUTES = {
 
 const getTabFromPath = (pathname) => {
   const tab = Object.keys(TAB_ROUTES).find((key) => TAB_ROUTES[key] === pathname);
-  return tab || "identify";
+  return tab || "home";
 };
-
-function MarkdownMessage({ content }) {
-  return (
-    <ReactMarkdown
-      remarkPlugins={[remarkGfm]}
-      components={{
-        p: ({ children }) => <p style={{ margin: "0 0 10px" }}>{children}</p>,
-        h1: ({ children }) => <h1 style={{ fontSize: 20, margin: "0 0 10px", color: "#1B4332" }}>{children}</h1>,
-        h2: ({ children }) => <h2 style={{ fontSize: 18, margin: "0 0 10px", color: "#1B4332" }}>{children}</h2>,
-        h3: ({ children }) => <h3 style={{ fontSize: 16, margin: "0 0 8px", color: "#1B4332" }}>{children}</h3>,
-        ul: ({ children }) => <ul style={{ margin: "6px 0 10px", paddingLeft: 20 }}>{children}</ul>,
-        ol: ({ children }) => <ol style={{ margin: "6px 0 10px", paddingLeft: 20 }}>{children}</ol>,
-        li: ({ children }) => <li style={{ marginBottom: 4 }}>{children}</li>,
-        blockquote: ({ children }) => (
-          <blockquote style={{ borderLeft: "3px solid #D4831A", margin: "8px 0", paddingLeft: 12, color: "#52796F" }}>
-            {children}
-          </blockquote>
-        ),
-        table: ({ children }) => (
-          <div style={{ overflowX: "auto", margin: "10px 0" }}>
-            <table style={{ borderCollapse: "collapse", minWidth: "100%", fontSize: 13 }}>{children}</table>
-          </div>
-        ),
-        th: ({ children }) => <th style={{ background: "#EEF5EE", border: "1px solid #D7E4DA", padding: "7px 9px", textAlign: "left", fontWeight: 700 }}>{children}</th>,
-        td: ({ children }) => <td style={{ border: "1px solid #E8E0D5", padding: "7px 9px", verticalAlign: "top" }}>{children}</td>,
-        code: ({ children }) => <code style={{ background: "#F3F4F6", borderRadius: 4, padding: "2px 5px", fontSize: 12 }}>{children}</code>
-      }}
-    >
-      {content.replace(/<br\s*\/?>/gi, "\n")}
-    </ReactMarkdown>
-  );
-}
 
 export default function CattleCare() {
   const location = useLocation();
@@ -250,7 +101,7 @@ export default function CattleCare() {
   useEffect(() => {
     const tab = getTabFromPath(location.pathname);
     if (location.pathname !== TAB_ROUTES[tab]) {
-      navigate(TAB_ROUTES.identify, { replace: true });
+      navigate(TAB_ROUTES.home, { replace: true });
     }
   }, [location.pathname, navigate]);
 
@@ -515,58 +366,6 @@ export default function CattleCare() {
       }} />
 
       <div style={{ position: "relative", zIndex: 2 }}>
-        <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600&display=swap');
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        :root { --green: #1B4332; --amber: #D4831A; --cream: #FDF6EC; --wheat: #F5E6C8; --sage: #52796F; --light: #FAFAF7; }
-        .nav-link { font-size: 14px; font-weight: 500; color: rgba(255,255,255,0.85); text-decoration: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; background: none; border: none; transition: background 0.2s, color 0.2s; }
-        .nav-link:hover { background: rgba(255,255,255,0.12); color: #fff; }
-        .nav-link.active { background: rgba(255,255,255,0.18); color: #fff; }
-        .tab-btn { padding: 10px 24px; border: none; cursor: pointer; font-size: 14px; font-weight: 500; border-radius: 8px; transition: all 0.2s; background: transparent; color: #6B7280; }
-        .tab-btn.active { background: #1B4332; color: #fff; }
-        .tab-btn:hover:not(.active) { background: #F3F4F6; color: #1B4332; }
-        .upload-zone { border: 2px dashed #C4B89A; border-radius: 16px; padding: 48px 24px; text-align: center; cursor: pointer; transition: all 0.2s; background: #FFFDF9; }
-        .upload-zone.dragging { border-color: #D4831A; background: #FEF3E2; }
-        .upload-zone:hover { border-color: #D4831A; background: #FEF9F0; }
-        .btn-primary { background: #1B4332; color: #fff; border: none; padding: 14px 32px; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; transition: background 0.2s, transform 0.1s; display: inline-flex; align-items: center; gap: 8px; }
-        .btn-primary:hover { background: #133226; }
-        .btn-primary:active { transform: scale(0.98); }
-        .btn-primary:disabled { background: #9CA3AF; cursor: not-allowed; }
-        .btn-secondary { background: transparent; color: #1B4332; border: 1.5px solid #1B4332; padding: 10px 24px; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
-        .btn-secondary:hover { background: #1B4332; color: #fff; }
-        .breed-card { background: #fff; border: 1px solid #E8E0D5; border-radius: 16px; padding: 24px; cursor: pointer; transition: all 0.2s; }
-        .breed-card:hover { border-color: #D4831A; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(27,67,50,0.08); }
-        .breed-card.selected { border-color: #1B4332; border-width: 2px; box-shadow: 0 8px 24px rgba(27,67,50,0.12); }
-        .confidence-bar { height: 8px; border-radius: 4px; background: #E8E0D5; overflow: hidden; }
-        .confidence-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #1B4332, #52796F); transition: width 1s ease; }
-        .trait-pill { background: #EEF5EE; color: #1B4332; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; display: inline-block; }
-        .stat-card { background: rgba(255,255,255,0.12); backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; padding: 20px 24px; text-align: center; }
-        .section-eyebrow { font-size: 12px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #D4831A; margin-bottom: 8px; }
-        .nutrition-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #F3EDE3; }
-        .nutrition-row:last-child { border-bottom: none; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .spinner { width: 24px; height: 24px; border: 3px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite; }
-        @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
-        .fade-up { animation: fadeUp 0.4s ease forwards; }
-        @media (max-width: 768px) {
-          .desktop-nav { display: none !important; }
-          .hero-stats { grid-template-columns: repeat(2, 1fr) !important; }
-          .breed-grid { grid-template-columns: 1fr !important; }
-          .result-grid { grid-template-columns: 1fr !important; }
-          .footer-content { flex-direction: column !important; align-items: flex-start !important; }
-          .footer-meta { align-items: flex-start !important; flex-wrap: wrap !important; }
-        }
-        .nutrition-select {
-          appearance: auto;
-          min-height: 40px;
-          color-scheme: dark;
-        }
-        .nutrition-select option {
-          background: #ffffff;
-          color: #1f2937;
-        }
-      `}</style>
-
         {/* ─── NAVBAR ─── */}
         <nav style={{ background: "#1B4332", position: "sticky", top: 0, zIndex: 100 }}>
           <div style={{ width: "100%", padding: "0 24px", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -579,10 +378,10 @@ export default function CattleCare() {
             </div>
 
             <div className="desktop-nav" style={{ display: "flex", gap: 4 }}>
-              {["identify", "breeds", "nutrition"].map(tab => (
+              {["home", "identify", "breeds", "nutrition"].map(tab => (
                 <button key={tab} className={`nav-link ${activeTab === tab ? "active" : ""}`}
                   onClick={() => handleTabChange(tab)}>
-                  {tab === "identify" ? "🔍 Identify Breed" : tab === "breeds" ? "📚 Breed Library" : "🌾 Nutrition Guide"}
+                  {tab === "home" ? "🏠 Home" : tab === "identify" ? "🔍 Identify Breed" : tab === "breeds" ? "📚 Breed Library" : "🌾 Nutrition Guide"}
                 </button>
               ))}
             </div>
@@ -593,8 +392,8 @@ export default function CattleCare() {
           </div>
         </nav>
 
-        {/* ─── HERO ─── */}
-        <div style={{
+        {/* ─── HOME HERO ─── */}
+        {activeTab === "home" && <div style={{
           backgroundImage: `url(${cowImage})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
@@ -629,10 +428,10 @@ export default function CattleCare() {
               ))}
             </div>
           </div>
-        </div>
+        </div>}
 
         {/* ─── CONTENT ─── */}
-        <div style={{ width: "100%", padding: "48px 24px 80px" }}>
+        {activeTab !== "home" && <div style={{ width: "100%", padding: "48px 24px 80px" }}>
 
           {/* ════ TAB 1: IDENTIFY ════ */}
           {activeTab === "identify" && (
@@ -1083,107 +882,46 @@ export default function CattleCare() {
                     <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.12em", color: "#A7F3D0", textTransform: "uppercase", marginBottom: 8 }}>🤖 ML-Powered</div>
                     <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: 28, fontWeight: 700, marginBottom: 24, color: "#fff" }}>Nutrition Recommendation</h3>
 
-                    <form onSubmit={handleNutRecSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                      <div>
-                        <label style={{ fontSize: 11, fontWeight: 700, color: "#A7F3D0", display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>Breed</label>
-                        <select
-                          className="nutrition-select"
-                          value={nutRecFormData.breed}
-                          onChange={(e) => setNutRecFormData({...nutRecFormData, breed: e.target.value})}
-                          style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.2)", background: "rgba(255,255,255,0.08)", color: "#fff", fontSize: 13, fontFamily: "inherit" }}
-                        >
-                          {nutritionOptions.Breed.map(b => <option key={b} value={b}>{b}</option>)}
-                        </select>
+                    <form onSubmit={handleNutRecSubmit} className="nutrition-form-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 14 }}>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 14, padding: 16, border: "1px solid rgba(255,255,255,0.14)", borderRadius: 12, background: "rgba(255,255,255,0.04)" }}>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: "#A7F3D0", textTransform: "uppercase", letterSpacing: "0.08em" }}>Animal Profile</div>
+                        <NutritionSelect label="Breed" value={nutRecFormData.breed} options={nutritionOptions.Breed} onChange={(breed) => setNutRecFormData({...nutRecFormData, breed})} />
+                        <NutritionSelect label="Category" value={nutRecFormData.category} options={nutritionOptions.Category} onChange={(category) => setNutRecFormData({...nutRecFormData, category})} />
                       </div>
 
-                      <div>
-                        <label style={{ fontSize: 11, fontWeight: 700, color: "#A7F3D0", display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>Category</label>
-                        <select
-                          className="nutrition-select"
-                          value={nutRecFormData.category}
-                          onChange={(e) => setNutRecFormData({...nutRecFormData, category: e.target.value})}
-                          style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.2)", background: "rgba(255,255,255,0.08)", color: "#fff", fontSize: 13, fontFamily: "inherit" }}
-                        >
-                          {nutritionOptions.Category.map(c => <option key={c} value={c}>{c}</option>)}
-                        </select>
-                      </div>
-
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                        <div>
-                          <label style={{ fontSize: 11, fontWeight: 700, color: "#A7F3D0", display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>Weight (kg)</label>
-                          <input
-                            type="number"
-                            step="0.1"
-                            value={nutRecFormData.weight_kg}
-                            onChange={(e) => setNutRecFormData({...nutRecFormData, weight_kg: parseFloat(e.target.value)})}
-                            style={{ width: "100%", padding: "8px 10px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.2)", background: "rgba(255,255,255,0.08)", color: "#fff", fontSize: 13, fontFamily: "inherit" }}
-                          />
-                        </div>
-                        <div>
-                          <label style={{ fontSize: 11, fontWeight: 700, color: "#A7F3D0", display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>Age (mo)</label>
-                          <input
-                            type="number"
-                            step="1"
-                            value={nutRecFormData.age_months}
-                            onChange={(e) => setNutRecFormData({...nutRecFormData, age_months: parseFloat(e.target.value)})}
-                            style={{ width: "100%", padding: "8px 10px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.2)", background: "rgba(255,255,255,0.08)", color: "#fff", fontSize: 13, fontFamily: "inherit" }}
-                          />
+                      <div style={{ display: "flex", flexDirection: "column", gap: 14, padding: 16, border: "1px solid rgba(255,255,255,0.14)", borderRadius: 12, background: "rgba(255,255,255,0.04)" }}>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: "#A7F3D0", textTransform: "uppercase", letterSpacing: "0.08em" }}>Vitals</div>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                          <div>
+                            <label style={{ fontSize: 11, fontWeight: 700, color: "#A7F3D0", display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>Weight (kg)</label>
+                            <input type="number" step="0.1" value={nutRecFormData.weight_kg} onChange={(e) => setNutRecFormData({...nutRecFormData, weight_kg: parseFloat(e.target.value)})} style={{ width: "100%", padding: "8px 10px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.2)", background: "rgba(255,255,255,0.08)", color: "#fff", fontSize: 13, fontFamily: "inherit" }} />
+                          </div>
+                          <div>
+                            <label style={{ fontSize: 11, fontWeight: 700, color: "#A7F3D0", display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>Age (mo)</label>
+                            <input type="number" step="1" value={nutRecFormData.age_months} onChange={(e) => setNutRecFormData({...nutRecFormData, age_months: parseFloat(e.target.value)})} style={{ width: "100%", padding: "8px 10px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.2)", background: "rgba(255,255,255,0.08)", color: "#fff", fontSize: 13, fontFamily: "inherit" }} />
+                          </div>
+                          <div>
+                            <label style={{ fontSize: 11, fontWeight: 700, color: "#A7F3D0", display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>Milk (L/day)</label>
+                            <input type="number" step="0.1" value={nutRecFormData.milk_yield_l} onChange={(e) => setNutRecFormData({...nutRecFormData, milk_yield_l: parseFloat(e.target.value)})} style={{ width: "100%", padding: "8px 10px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.2)", background: "rgba(255,255,255,0.08)", color: "#fff", fontSize: 13, fontFamily: "inherit" }} />
+                          </div>
+                          <div>
+                            <label style={{ fontSize: 11, fontWeight: 700, color: "#A7F3D0", display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>BCS (1-5)</label>
+                            <input type="number" step="0.1" min="1" max="5" value={nutRecFormData.bcs} onChange={(e) => setNutRecFormData({...nutRecFormData, bcs: parseFloat(e.target.value)})} style={{ width: "100%", padding: "8px 10px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.2)", background: "rgba(255,255,255,0.08)", color: "#fff", fontSize: 13, fontFamily: "inherit" }} />
+                          </div>
                         </div>
                       </div>
 
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                        <div>
-                          <label style={{ fontSize: 11, fontWeight: 700, color: "#A7F3D0", display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>Milk (L/day)</label>
-                          <input
-                            type="number"
-                            step="0.1"
-                            value={nutRecFormData.milk_yield_l}
-                            onChange={(e) => setNutRecFormData({...nutRecFormData, milk_yield_l: parseFloat(e.target.value)})}
-                            style={{ width: "100%", padding: "8px 10px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.2)", background: "rgba(255,255,255,0.08)", color: "#fff", fontSize: 13, fontFamily: "inherit" }}
-                          />
-                        </div>
-                        <div>
-                          <label style={{ fontSize: 11, fontWeight: 700, color: "#A7F3D0", display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>BCS (1-5)</label>
-                          <input
-                            type="number"
-                            step="0.1"
-                            min="1"
-                            max="5"
-                            value={nutRecFormData.bcs}
-                            onChange={(e) => setNutRecFormData({...nutRecFormData, bcs: parseFloat(e.target.value)})}
-                            style={{ width: "100%", padding: "8px 10px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.2)", background: "rgba(255,255,255,0.08)", color: "#fff", fontSize: 13, fontFamily: "inherit" }}
-                          />
-                        </div>
-                      </div>
-
-                      <div>
-                        <label style={{ fontSize: 11, fontWeight: 700, color: "#A7F3D0", display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>Activity Level</label>
-                        <select
-                          className="nutrition-select"
-                          value={nutRecFormData.activity_level}
-                          onChange={(e) => setNutRecFormData({...nutRecFormData, activity_level: e.target.value})}
-                          style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.2)", background: "rgba(255,255,255,0.08)", color: "#fff", fontSize: 13, fontFamily: "inherit" }}
-                        >
-                          {nutritionOptions.Activity_Level.map(a => <option key={a} value={a}>{a}</option>)}
-                        </select>
-                      </div>
-
-                      <div>
-                        <label style={{ fontSize: 11, fontWeight: 700, color: "#A7F3D0", display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>Health Status ⚠️</label>
-                        <select
-                          className="nutrition-select"
-                          value={nutRecFormData.health_status}
-                          onChange={(e) => setNutRecFormData({...nutRecFormData, health_status: e.target.value})}
-                          style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.2)", background: "rgba(255,255,255,0.08)", color: "#fff", fontSize: 13, fontFamily: "inherit" }}
-                        >
-                          {nutritionOptions.Health_Status.map(h => <option key={h} value={h}>{h}</option>)}
-                        </select>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 14, padding: 16, border: "1px solid rgba(255,255,255,0.14)", borderRadius: 12, background: "rgba(255,255,255,0.04)" }}>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: "#A7F3D0", textTransform: "uppercase", letterSpacing: "0.08em" }}>Condition</div>
+                        <NutritionSelect label="Activity Level" value={nutRecFormData.activity_level} options={nutritionOptions.Activity_Level} onChange={(activity_level) => setNutRecFormData({...nutRecFormData, activity_level})} searchable={false} />
+                        <NutritionSelect label="Health Status" value={nutRecFormData.health_status} options={nutritionOptions.Health_Status} onChange={(health_status) => setNutRecFormData({...nutRecFormData, health_status})} />
                       </div>
 
                       <button
+                        className="nutrition-form-submit"
                         type="submit"
                         disabled={nutRecLoading}
-                        style={{ width: "100%", marginTop: 8, padding: "12px 16px", borderRadius: 10, border: "none", background: nutRecLoading ? "rgba(166,243,208,0.3)" : "#A7F3D0", color: "#0d5a56", fontWeight: 700, fontSize: 14, cursor: nutRecLoading ? "not-allowed" : "pointer", transition: "all 0.2s" }}
+                        style={{ gridColumn: "1 / -1", width: "100%", marginTop: 2, padding: "12px 16px", borderRadius: 10, border: "none", background: nutRecLoading ? "rgba(166,243,208,0.3)" : "#A7F3D0", color: "#0d5a56", fontWeight: 700, fontSize: 14, cursor: nutRecLoading ? "not-allowed" : "pointer", transition: "all 0.2s" }}
                       >
                         {nutRecLoading ? <>⏳ Analyzing...</> : <>🎯 Get Recommendation</>}
                       </button>
@@ -1423,7 +1161,7 @@ export default function CattleCare() {
 
             </div>          </div>
           )}
-        </div>
+        </div>}
 
         {/* ─── FOOTER ─── */}
         <footer style={{ background: "#111827", color: "rgba(255,255,255,0.6)", padding: "18px 24px", width: "100%" }}>

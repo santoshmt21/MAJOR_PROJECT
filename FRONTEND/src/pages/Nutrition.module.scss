@@ -1,0 +1,30 @@
+:global(.nutrition-row) {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #F3EDE3;
+
+  &:last-child { border-bottom: none; }
+}
+
+:global(.nutrition-form-grid) {
+  display: grid;
+}
+
+:global(.nutrition-combobox) { position: relative; }
+:global(.nutrition-combobox-trigger) { width: 100%; min-height: 40px; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; background: rgba(255,255,255,0.08); color: #fff; font: inherit; font-size: 13px; text-align: left; cursor: pointer; }
+:global(.nutrition-combobox-trigger:hover), :global(.nutrition-combobox-trigger.open) { border-color: #A7F3D0; background: rgba(255,255,255,0.13); }
+:global(.nutrition-combobox-chevron) { color: #A7F3D0; font-size: 18px; line-height: 1; }
+:global(.nutrition-combobox-menu) { position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 20; overflow: hidden; border: 1px solid #C3D9CF; border-radius: 10px; background: #fff; box-shadow: 0 12px 28px rgba(0,0,0,0.22); }
+:global(.nutrition-combobox-search) { width: calc(100% - 16px); margin: 8px; padding: 8px 10px; border: 1px solid #D1D5DB; border-radius: 6px; color: #1F2937; background: #F9FAFB; font: inherit; font-size: 13px; outline: none; }
+:global(.nutrition-combobox-search:focus) { border-color: #1B4332; box-shadow: 0 0 0 2px rgba(27,67,50,0.12); }
+:global(.nutrition-combobox-options) { max-height: 220px; overflow-y: auto; padding: 4px; }
+:global(.nutrition-combobox-option) { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 9px 10px; border: 0; border-radius: 6px; background: transparent; color: #1F2937; font: inherit; font-size: 13px; text-align: left; cursor: pointer; }
+:global(.nutrition-combobox-option:hover), :global(.nutrition-combobox-option.selected) { background: #E8F3EC; color: #1B4332; font-weight: 600; }
+:global(.nutrition-combobox-empty) { padding: 12px 10px; color: #6B7280; font-size: 13px; }
+
+@media (max-width: 768px) {
+  :global(.nutrition-form-grid) { grid-template-columns: 1fr !important; }
+  :global(.nutrition-form-submit) { grid-column: auto !important; }
+}
