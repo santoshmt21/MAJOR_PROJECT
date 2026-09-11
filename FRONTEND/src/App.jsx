@@ -384,10 +384,31 @@ export default function CattleCare() {
               ))}
             </div>
 
-            <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              style={{ display: "none", background: "none", border: "none", color: "#fff", fontSize: 22, cursor: "pointer" }}
-              className="mobile-menu-btn">☰</button>
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-label="Toggle navigation menu"
+              aria-expanded={mobileMenuOpen}
+              className="mobile-menu-btn"
+            >
+              {mobileMenuOpen ? "✕" : "☰"}
+            </button>
           </div>
+          {mobileMenuOpen && (
+            <div className="mobile-nav-menu">
+              {["home", "identify", "breeds", "nutrition"].map(tab => (
+                <button
+                  key={tab}
+                  className={`nav-link ${activeTab === tab ? "active" : ""}`}
+                  onClick={() => {
+                    handleTabChange(tab);
+                    setMobileMenuOpen(false);
+                  }}
+                >
+                  {tab === "home" ? "🏠 Home" : tab === "identify" ? "🔍 Identify Breed" : tab === "breeds" ? "📚 Breed Library" : "🌾 Nutrition Guide"}
+                </button>
+              ))}
+            </div>
+          )}
         </nav>
 
         {/* ─── HOME HERO ─── */}
