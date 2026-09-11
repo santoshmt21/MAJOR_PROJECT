@@ -15,6 +15,16 @@
   --light: #FAFAF7;
 }
 
+:global(.app-shell) {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+}
+
+:global(.app-footer) {
+  margin-top: auto;
+}
+
 :global(.nav-link) { font-size: 14px; font-weight: 500; color: rgba(255,255,255,0.85); text-decoration: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; background: none; border: none; transition: background 0.2s, color 0.2s; }
 :global(.nav-link:hover) { background: rgba(255,255,255,0.12); color: #fff; }
 :global(.nav-link.active) { background: rgba(255,255,255,0.18); color: #fff; }

@@ -1,15 +1,13 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import backgroundImage from "./background.jpg";
-import cowImage from "./cow.jpg";
-import "./App.module.scss";
-import "./pages/Home.module.scss";
-import "./pages/Identify.module.scss";
-import "./pages/Breeds.module.scss";
-import "./pages/Nutrition.module.scss";
 import MarkdownMessage from "./components/MarkdownMessage";
 import NutritionSelect from "./components/NutritionSelect";
-import { BREEDS_INFO, HERO_STATS } from "./data/breeds";
+import Home from "./pages/Home";
+import Identify from "./pages/Identify";
+import Breeds from "./pages/Breeds";
+import Nutrition from "./pages/Nutrition";
+import { BREEDS_INFO } from "./data/breeds";
 
 const API_BASE_URL = "https://cattle-intelligence-api-2026-awe3huf9e3fag6ce.centralindia-01.azurewebsites.net";
 
@@ -365,7 +363,7 @@ export default function CattleCare() {
         zIndex: 1
       }} />
 
-      <div style={{ position: "relative", zIndex: 2 }}>
+      <div className="app-shell" style={{ position: "relative", zIndex: 2 }}>
         {/* ─── NAVBAR ─── */}
         <nav style={{ background: "#1B4332", position: "sticky", top: 0, zIndex: 100 }}>
           <div style={{ width: "100%", padding: "0 24px", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -393,48 +391,14 @@ export default function CattleCare() {
         </nav>
 
         {/* ─── HOME HERO ─── */}
-        {activeTab === "home" && <div style={{
-          backgroundImage: `url(${cowImage})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          backgroundRepeat: "no-repeat",
-          padding: "0",
-          position: "relative",
-          overflow: "hidden",
-          width: "100%",
-          minHeight: "500px"
-        }}>
-          <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.3)" }} />
-          <div style={{ maxWidth: 800, margin: "0 auto", textAlign: "center", position: "relative", padding: "72px 24px 80px" }}>
-            <div style={{ display: "inline-block", background: "rgba(212,131,26,0.2)", border: "1px solid rgba(212,131,26,0.4)", borderRadius: 20, padding: "4px 16px", marginBottom: 24 }}>
-              <span style={{ fontSize: 12, fontWeight: 600, color: "#FAC75A", letterSpacing: "0.08em", textTransform: "uppercase" }}>AI-Powered Cattle Intelligence</span>
-            </div>
-            <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: "clamp(36px, 5vw, 60px)", fontWeight: 700, color: "#fff", lineHeight: 1.15, marginBottom: 20 }}>
-              Know Your Herd.<br />
-              <span style={{ color: "#FAC75A" }}>Grow Your Farm.</span>
-            </h1>
-            <p style={{ fontSize: "clamp(16px, 2vw, 20px)", color: "rgba(255,255,255,0.75)", lineHeight: 1.7, marginBottom: 16, maxWidth: 580, margin: "0 auto 16px" }}>
-              Every animal tells a story. Every farmer deserves the tools to listen.
-            </p>
-            <p style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", fontStyle: "italic", marginBottom: 48 }}>
-              "Every herd counts. Every farmer matters."
-            </p>
-            <div className="hero-stats" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, maxWidth: 600, margin: "0 auto" }}>
-              {HERO_STATS.map(s => (
-                <div key={s.label} className="stat-card">
-                  <div style={{ fontSize: 28, fontWeight: 700, color: "#FAC75A", fontFamily: "'Playfair Display', serif" }}>{s.value}</div>
-                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.65)", marginTop: 4 }}>{s.label}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>}
+        {activeTab === "home" && <Home />}
 
         {/* ─── CONTENT ─── */}
         {activeTab !== "home" && <div style={{ width: "100%", padding: "48px 24px 80px" }}>
 
           {/* ════ TAB 1: IDENTIFY ════ */}
           {activeTab === "identify" && (
+            <Identify>
             <div className="fade-up">
               <div style={{ textAlign: "center", marginBottom: 48 }}>
                 <div className="section-eyebrow">AI Breed Identification</div>
@@ -775,10 +739,13 @@ export default function CattleCare() {
                 </div>
               )}
             </div>
+            </Identify>
           )}
 
           {/* ════ TAB 2: BREED LIBRARY ════ */}
-          {activeTab === "breeds" && (
+          {activeTab === "breeds" && <Breeds breeds={breedsList} selectedBreed={selectedBreed} onSelectBreed={setSelectedBreed} onCloseBreed={() => setSelectedBreed(null)} />}
+          {false && (
+            <Breeds>
             <div className="fade-up">
               <div style={{ textAlign: "center", marginBottom: 48 }}>
                 <div className="section-eyebrow">Breed Encyclopedia</div>
@@ -862,10 +829,12 @@ export default function CattleCare() {
                 </div>
               )}
             </div>
+            </Breeds>
           )}
 
           {/* ════ TAB 3: NUTRITION ════ */}
           {activeTab === "nutrition" && (
+            <Nutrition>
             <div className="fade-up">
               <div style={{ textAlign: "center", marginBottom: 48 }}>
                 <div className="section-eyebrow">Nutrition & Feeding Guide</div>
@@ -1160,11 +1129,12 @@ export default function CattleCare() {
             </div>
 
             </div>          </div>
+            </Nutrition>
           )}
         </div>}
 
         {/* ─── FOOTER ─── */}
-        <footer style={{ background: "#111827", color: "rgba(255,255,255,0.6)", padding: "18px 24px", width: "100%" }}>
+        <footer className="app-footer" style={{ background: "#111827", color: "rgba(255,255,255,0.6)", padding: "18px 24px", width: "100%" }}>
           <div className="footer-content" style={{ width: "100%", maxWidth: 1200, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
