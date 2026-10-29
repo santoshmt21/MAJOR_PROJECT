@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import backgroundImage from "./background.jpg";
+import notCattleImage from "./NOT_CATTLE.png";
 import MarkdownMessage from "./components/MarkdownMessage";
 import NutritionSelect from "./components/NutritionSelect";
 import Home from "./pages/Home";
@@ -18,6 +19,8 @@ const readApiError = async (response, fallback) => {
     return fallback;
   }
 };
+const NON_CATTLE_MESSAGE = "This image does not appear to contain cattle.";
+const isNonCattleError = (message) => message?.includes(NON_CATTLE_MESSAGE);
 
 const TAB_ROUTES = {
   home: "/",
@@ -486,6 +489,13 @@ export default function CattleCare() {
                 <div>
                   {error && (
                     <div style={{ background: "#FEF2F2", border: "1px solid #FCA5A5", borderRadius: 12, padding: 20, marginBottom: 20 }}>
+                      {isNonCattleError(error) && (
+                        <img
+                          src={notCattleImage}
+                          alt="Example of an image that does not contain cattle"
+                          style={{ width: "100%", maxHeight: 220, objectFit: "contain", borderRadius: 10, marginBottom: 16 }}
+                        />
+                      )}
                       <p style={{ color: "#B91C1C", fontSize: 14, fontWeight: 500 }}>⚠️ {error}</p>
                     </div>
                   )}
@@ -655,6 +665,13 @@ export default function CattleCare() {
                   <div style={{ background: "rgba(255,255,255,0.92)", borderRadius: 18, padding: 22, color: "#0f172a" }}>
                     {skinError && (
                       <div style={{ background: "#FEF2F2", border: "1px solid #FCA5A5", borderRadius: 12, padding: 16, marginBottom: 16 }}>
+                        {isNonCattleError(skinError) && (
+                          <img
+                            src={notCattleImage}
+                            alt="Example of an image that does not contain cattle"
+                            style={{ width: "100%", maxHeight: 220, objectFit: "contain", borderRadius: 10, marginBottom: 16 }}
+                          />
+                        )}
                         <p style={{ color: "#B91C1C", fontSize: 14, fontWeight: 500 }}>⚠️ {skinError}</p>
                       </div>
                     )}
