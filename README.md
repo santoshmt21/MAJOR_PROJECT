@@ -68,6 +68,9 @@ Create a `.env` file inside `BACKEND/`:
 
 ```env
 API_KEY=your_groq_api_key
+CATTLE_VERIFICATION_THRESHOLD=0.75
+# Optional: CATTLE_VERIFICATION_MAX_IMAGE_BYTES=10485760
+# Optional: CATTLE_VERIFICATION_TIMEOUT_SECONDS=20
 
 DB_HOST=localhost
 DB_PORT=5432
@@ -76,7 +79,7 @@ DB_USER=postgres
 DB_PASSWORD=your_database_password
 ```
 
-`API_KEY` is required when the RAG service is initialized. The database variables are used by the `/breeds` endpoint. Do not commit `.env` files or real credentials.
+`API_KEY` is required by both the existing RAG service and the cattle image verification layer. The verification layer uses Groq's `qwen/qwen3.8-27b` vision model, accepts only supported image files up to 10 MB by default, and rejects uncertain results below `CATTLE_VERIFICATION_THRESHOLD`. The database variables are used by the `/breeds` endpoint. Do not commit `.env` files or real credentials.
 
 ## Backend Setup
 

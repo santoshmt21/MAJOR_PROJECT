@@ -16,6 +16,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from rag import initialize_rag_service, get_rag_service
+from cattle_verification import CattleVerificationError, verify_cattle_image
 from NUTRITION_RECOMEND import (
     get_nutrition_options,
     get_recommendation,
@@ -175,6 +176,16 @@ def map_breed_to_frontend(breed_row, traits):
 # ─────────────────────────────────────────────
 logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s")
 logger = logging.getLogger(__name__)
+
+
+async def read_and_verify_cattle_upload(file: UploadFile) -> bytes:
+    """Read and verify an image before any local prediction model is called."""
+    image_bytes = await file.read()
+    try:
+        await verify_cattle_image(image_bytes, file.content_type)
+    except CattleVerificationError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
+    return image_bytes
 
 # ─────────────────────────────────────────────
 # Config
@@ -542,15 +553,8 @@ async def predict(file: UploadFile = File(..., description="Cattle image (JPEG /
     if YOLO_MODEL is None:
         raise HTTPException(status_code=503, detail="YOLO model is not loaded yet.")
 
-    # ── validate content type ────────────────
-    if file.content_type not in ("image/jpeg", "image/png", "image/jpg", "image/webp"):
-        raise HTTPException(
-            status_code=400,
-            detail=f"Unsupported file type '{file.content_type}'. Send JPEG or PNG."
-        )
-
     try:
-        image_bytes = await file.read()
+        image_bytes = await read_and_verify_cattle_upload(file)
         img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
         np_img = np.array(img)
 
@@ -691,14 +695,8 @@ async def predict_skin_disease(file: UploadFile = File(..., description="Cattle 
     if SKIN_YOLO_MODEL is None:
         raise HTTPException(status_code=503, detail="Skin disease YOLO model is not loaded yet.")
 
-    if file.content_type not in ("image/jpeg", "image/png", "image/jpg", "image/webp"):
-        raise HTTPException(
-            status_code=400,
-            detail=f"Unsupported file type '{file.content_type}'. Send JPEG or PNG."
-        )
-
     try:
-        image_bytes = await file.read()
+        image_bytes = await read_and_verify_cattle_upload(file)
         img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
 
         yolo_result = None

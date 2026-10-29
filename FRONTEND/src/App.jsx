@@ -10,6 +10,14 @@ import Nutrition from "./pages/Nutrition";
 import { BREEDS_INFO } from "./data/breeds";
 
 const API_BASE_URL = "https://cattle-intelligence-api-2026-awe3huf9e3fag6ce.centralindia-01.azurewebsites.net";
+const readApiError = async (response, fallback) => {
+  try {
+    const data = await response.json();
+    return data.detail || fallback;
+  } catch {
+    return fallback;
+  }
+};
 
 const TAB_ROUTES = {
   home: "/",
@@ -174,8 +182,7 @@ export default function CattleCare() {
         body: formData,
       });
       if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.detail || "Prediction failed");
+        throw new Error(await readApiError(res, "Prediction failed"));
       }
       const data = await res.json();
       setResult(data);
@@ -212,8 +219,7 @@ export default function CattleCare() {
         body: formData,
       });
       if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.detail || "Skin disease prediction failed");
+        throw new Error(await readApiError(res, "Skin disease prediction failed"));
       }
       const data = await res.json();
       setSkinResult(data);
@@ -1175,4 +1181,3 @@ export default function CattleCare() {
     </div>
   );
 }
-
